@@ -17,6 +17,7 @@ export default async function AddStampPage() {
         id: true,
         name: true,
         username: true,
+        phone: true,
         stamps: true,
         freeRedeems: true,
         totalCups: true,

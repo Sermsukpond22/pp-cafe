@@ -3,12 +3,13 @@
 import { useActionState, useState, useEffect } from 'react'
 import { addStamps, redeemFreeCup } from '@/app/actions/stamps'
 import toast from 'react-hot-toast'
-import { Plus, Minus, Trash2, Coffee, ShoppingBag, CheckCircle } from 'lucide-react'
+import { Plus, Minus, Trash2, Coffee, ShoppingBag, User, Phone, CheckCircle } from 'lucide-react'
 
 interface Customer {
   id: string
   name: string
   username: string
+  phone?: string | null
   stamps: number
   freeRedeems: number
   totalCups: number
@@ -49,11 +50,12 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
   const [manualCups, setManualCups] = useState(1)
   const [note, setNote] = useState('')
 
-  // Filter customers
+  // Filter customers by name, username, or phone
   const filteredCustomers = customers.filter(
     (c) =>
       c.name.toLowerCase().includes(searchCustomer.toLowerCase()) ||
-      c.username.toLowerCase().includes(searchCustomer.toLowerCase())
+      c.username.toLowerCase().includes(searchCustomer.toLowerCase()) ||
+      (c.phone && c.phone.includes(searchCustomer))
   )
 
   // Filter active menu items
@@ -131,20 +133,22 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
     <div className="space-y-5">
       {/* 1. ค้นหาลูกค้า */}
       <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-5 border border-gray-100">
-        <label className="block text-sm sm:text-base font-bold text-gray-900 mb-2">
-          1. เลือกลูกค้าที่จะสะสมแต้ม
+        <label className="block text-sm sm:text-base font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <User className="w-4 h-4 text-emerald-600" />
+          <span>1. ค้นหาและเลือกลูกค้าที่จะสะสมแต้ม</span>
         </label>
         <input
           type="text"
           value={searchCustomer}
           onChange={(e) => setSearchCustomer(e.target.value)}
-          placeholder="พิมพ์ชื่อ หรือ username ลูกค้า..."
+          placeholder="ค้นหาด้วย ชื่อจริง, username หรือเบอร์โทร..."
           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"
         />
+
         {searchCustomer && (
-          <div className="mt-2 space-y-1.5 max-h-56 overflow-y-auto border border-gray-100 rounded-xl p-1.5 bg-gray-50/50">
+          <div className="mt-2 space-y-1.5 max-h-60 overflow-y-auto border border-gray-100 rounded-xl p-1.5 bg-gray-50/50">
             {filteredCustomers.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-4">ไม่พบรายชื่อลูกค้า</p>
+              <p className="text-gray-400 text-sm text-center py-4">ไม่พบรายชื่อลูกค้านี้</p>
             ) : (
               filteredCustomers.map((c) => (
                 <button
@@ -155,9 +159,21 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
                   }}
                   className="w-full text-left p-3 rounded-xl hover:bg-emerald-100/70 bg-white transition flex items-center justify-between border border-gray-100 shadow-2xs"
                 >
-                  <div>
-                    <p className="font-bold text-gray-900 text-sm sm:text-base">{c.name}</p>
-                    <p className="text-gray-500 text-xs">@{c.username}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 font-black flex items-center justify-center text-base">
+                      {c.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 text-sm sm:text-base">
+                        {c.name}
+                        <span className="text-emerald-700 font-semibold text-xs ml-2">(@{c.username})</span>
+                      </p>
+                      {c.phone && (
+                        <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
+                          <Phone className="w-3 h-3" /> {c.phone}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <span className="text-xs sm:text-sm bg-emerald-100 text-emerald-800 font-black px-3 py-1 rounded-full border border-emerald-200">
                     {c.stamps}/{stampsRequired} แต้ม
@@ -169,21 +185,39 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
         )}
       </div>
 
-      {/* เมื่อเลือกลูกค้าแล้ว */}
+      {/* เมื่อเลือกลูกค้าแล้ว - แสดงรายละเอียดชื่อ user ชัดเจนมาก */}
       {selectedCustomer && (
         <>
-          {/* Card แสดงสถานะลูกค้า */}
-          <div className="bg-emerald-50/90 border-2 border-emerald-200 rounded-2xl p-4 sm:p-5 shadow-xs">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="font-black text-emerald-950 text-base sm:text-lg">{selectedCustomer.name}</h3>
-                <p className="text-emerald-800 text-xs sm:text-sm font-medium">
-                  @{selectedCustomer.username} · ยอดซื้อสะสม {selectedCustomer.totalCups} แก้ว
-                </p>
+          {/* Card แสดงสถานะและชื่อลูกค้าอย่างเด่นชัด */}
+          <div className="bg-emerald-50 border-2 border-emerald-300 rounded-3xl p-5 shadow-xs relative">
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-3.5">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-700 text-white font-black text-2xl flex items-center justify-center shadow-xs">
+                  {selectedCustomer.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-black text-gray-900 text-lg sm:text-xl">
+                      {selectedCustomer.name}
+                    </h3>
+                    <span className="bg-emerald-200/90 text-emerald-900 text-xs font-black px-2.5 py-0.5 rounded-full">
+                      @{selectedCustomer.username}
+                    </span>
+                  </div>
+                  <p className="text-emerald-800 text-xs sm:text-sm font-medium mt-1 flex items-center gap-2 flex-wrap">
+                    {selectedCustomer.phone && (
+                      <span className="flex items-center gap-1 font-semibold">
+                        <Phone className="w-3.5 h-3.5 text-emerald-600" /> {selectedCustomer.phone}
+                      </span>
+                    )}
+                    <span>· ยอดซื้อสะสม {selectedCustomer.totalCups} แก้ว</span>
+                  </p>
+                </div>
               </div>
+
               <button
                 onClick={() => setSelectedCustomer(null)}
-                className="text-gray-400 hover:text-red-500 text-2xl font-bold p-1 leading-none"
+                className="bg-white/80 hover:bg-white text-gray-400 hover:text-red-500 rounded-xl p-1.5 text-xl font-bold transition shadow-2xs leading-none"
                 title="เปลี่ยนลูกค้า"
               >
                 ×
@@ -191,11 +225,11 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
             </div>
 
             {/* Stamp Dots */}
-            <div className="flex gap-2 flex-wrap my-3 p-3 bg-white/80 rounded-xl border border-emerald-100">
+            <div className="flex gap-2 flex-wrap my-3 p-3 bg-white rounded-2xl border border-emerald-100">
               {Array.from({ length: stampsRequired }).map((_, i) => (
                 <span
                   key={i}
-                  className={`text-lg sm:text-xl transition-all ${
+                  className={`text-xl transition-all ${
                     i < selectedCustomer.stamps ? 'opacity-100 scale-105' : 'opacity-20'
                   }`}
                 >
@@ -203,14 +237,17 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
                 </span>
               ))}
             </div>
-            <p className="text-xs sm:text-sm text-emerald-900 font-bold">
-              แต้มปัจจุบัน: <span className="text-emerald-700 text-sm sm:text-base">{selectedCustomer.stamps}/{stampsRequired} แก้ว</span>
+
+            <div className="flex items-center justify-between text-xs sm:text-sm text-emerald-900 font-bold mt-2">
+              <span>
+                แต้มปัจจุบัน: <strong className="text-emerald-700 text-sm sm:text-base">{selectedCustomer.stamps}/{stampsRequired} แก้ว</strong>
+              </span>
               {selectedCustomer.freeRedeems > 0 && (
-                <span className="text-amber-700 font-extrabold ml-2">
-                  (มีสิทธิ์แลกฟรี {selectedCustomer.freeRedeems} แก้ว! 🎉)
+                <span className="bg-amber-100 border border-amber-300 text-amber-800 font-extrabold px-3 py-1 rounded-full text-xs animate-pulse">
+                  🎁 มีสิทธิ์แลกฟรี {selectedCustomer.freeRedeems} แก้ว!
                 </span>
               )}
-            </p>
+            </div>
           </div>
 
           {/* ปุ่มแลกน้ำฟรี ถ้ามีสิทธิ์ */}
@@ -218,7 +255,7 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
             <form action={redeemAction} className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-xs">
               <input type="hidden" name="userId" value={selectedCustomer.id} />
               <div>
-                <p className="font-black text-amber-950 text-sm sm:text-base">🎁 สิทธิ์แลกน้ำฟรี</p>
+                <p className="font-black text-amber-950 text-sm sm:text-base">🎁 สิทธิ์แลกน้ำฟรีของ {selectedCustomer.name}</p>
                 <p className="text-xs sm:text-sm text-amber-800 font-medium">มีสิทธิ์แลกฟรีคงเหลือ {selectedCustomer.freeRedeems} แก้ว</p>
               </div>
               <button
@@ -381,15 +418,18 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
               </div>
             )}
 
-            {/* สรุปยอดรวม (Summary Bar) */}
+            {/* สรุปยอดรวม (Summary Bar พร้อมชื่อ User ที่กำลังรับแต้ม) */}
             <div className="bg-emerald-700 text-white rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-md">
               <div>
-                <p className="text-xs sm:text-sm text-emerald-200 font-semibold">สรุปบิลนี้</p>
-                <p className="text-2xl sm:text-3xl font-black tracking-tight">
+                <p className="text-xs sm:text-sm text-emerald-200 font-semibold flex items-center gap-1.5">
+                  <span>กำลังบันทึกให้:</span>
+                  <strong className="text-white underline">{selectedCustomer.name} (@{selectedCustomer.username})</strong>
+                </p>
+                <p className="text-2xl sm:text-3xl font-black tracking-tight mt-1">
                   {totalCups} แก้ว {totalAmount > 0 && `· ${totalAmount.toLocaleString()} ฿`}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="text-right flex-shrink-0">
                 <span className="inline-block text-xs sm:text-sm bg-emerald-800 border border-emerald-500 px-3.5 py-1.5 rounded-full font-black">
                   + {totalCups} แต้ม
                 </span>
@@ -410,7 +450,7 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
               />
             </div>
 
-            {/* Submit Button */}
+            {/* Submit Button พร้อมชื่อผู้ใช้ชัดเจน */}
             <form action={stampAction}>
               <input type="hidden" name="userId" value={selectedCustomer.id} />
               <input type="hidden" name="cups" value={totalCups} />
@@ -429,7 +469,7 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
                 <Coffee className="w-5 h-5 sm:w-6 sm:h-6" />
                 {stampPending
                   ? 'กำลังบันทึกรายการ...'
-                  : `บันทึกรายการ (ได้ ${totalCups} แต้ม)`}
+                  : `บันทึกให้ ${selectedCustomer.name} (@${selectedCustomer.username}) · +${totalCups} แต้ม`}
               </button>
             </form>
           </div>
