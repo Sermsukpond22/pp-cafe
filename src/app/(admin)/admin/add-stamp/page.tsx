@@ -12,7 +12,7 @@ export default async function AddStampPage() {
   const [customers, menuItems] = await Promise.all([
     prisma.user.findMany({
       where: { role: 'CUSTOMER' },
-      orderBy: { name: 'asc' },
+      orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
         name: true,

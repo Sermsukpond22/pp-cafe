@@ -145,44 +145,66 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"
         />
 
-        {searchCustomer && (
-          <div className="mt-2 space-y-1.5 max-h-60 overflow-y-auto border border-gray-100 rounded-xl p-1.5 bg-gray-50/50">
-            {filteredCustomers.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-4">ไม่พบรายชื่อลูกค้านี้</p>
+        {/* แสดงรายชื่อลูกค้า 10 คนขึ้นมาก่อนทันที และจะฟิลเตอร์ตามที่พิมพ์ค้นหา */}
+        <div className="mt-3 space-y-1.5">
+          <div className="flex items-center justify-between px-1 mb-1.5">
+            <p className="text-xs sm:text-sm font-bold text-gray-600">
+              {searchCustomer.trim()
+                ? `🔎 ผลการค้นหา (${filteredCustomers.length} คน):`
+                : `💡 เลือกลูกค้าด่วน (10 คนล่าสุด):`}
+            </p>
+            {!searchCustomer.trim() && customers.length > 10 && (
+              <span className="text-[11px] text-gray-400 font-medium">
+                (พิมพ์ค้นหาเพื่อดูลูกค้าคนอื่น)
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-1.5 max-h-72 overflow-y-auto border border-gray-100 rounded-2xl p-1.5 bg-gray-50/60">
+            {(searchCustomer.trim() ? filteredCustomers : customers.slice(0, 10)).length === 0 ? (
+              <p className="text-gray-400 text-sm text-center py-6">ไม่พบรายชื่อลูกค้านี้</p>
             ) : (
-              filteredCustomers.map((c) => (
+              (searchCustomer.trim() ? filteredCustomers : customers.slice(0, 10)).map((c) => (
                 <button
                   key={c.id}
+                  type="button"
                   onClick={() => {
                     setSelectedCustomer(c)
                     setSearchCustomer('')
                   }}
-                  className="w-full text-left p-3 rounded-xl hover:bg-emerald-100/70 bg-white transition flex items-center justify-between border border-gray-100 shadow-2xs"
+                  className="w-full text-left p-3 rounded-xl hover:bg-emerald-100/70 active:bg-emerald-200/80 bg-white transition flex items-center justify-between border border-gray-200/70 shadow-2xs group"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 font-black flex items-center justify-center text-base">
+                  <div className="flex items-center gap-3 min-w-0 pr-2">
+                    <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-800 font-black flex items-center justify-center text-base flex-shrink-0 group-hover:bg-emerald-200">
                       {c.name.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="font-bold text-gray-900 text-sm sm:text-base">
+                    <div className="min-w-0">
+                      <p className="font-bold text-gray-900 text-sm sm:text-base truncate">
                         {c.name}
                         <span className="text-emerald-700 font-semibold text-xs ml-2">(@{c.username})</span>
                       </p>
-                      {c.phone && (
-                        <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
-                          <Phone className="w-3 h-3" /> {c.phone}
-                        </p>
-                      )}
+                      <p className="text-gray-400 text-xs flex items-center gap-2 mt-0.5">
+                        {c.phone && <span>📞 {c.phone}</span>}
+                        <span>· สะสม {c.totalCups} แก้ว</span>
+                      </p>
                     </div>
                   </div>
-                  <span className="text-xs sm:text-sm bg-emerald-100 text-emerald-800 font-black px-3 py-1 rounded-full border border-emerald-200">
-                    {c.stamps}/{stampsRequired} แต้ม
-                  </span>
+
+                  <div className="text-right flex-shrink-0">
+                    <span className="text-xs sm:text-sm bg-emerald-100 text-emerald-800 font-black px-2.5 py-1 rounded-full border border-emerald-200">
+                      {c.stamps}/{stampsRequired} แต้ม
+                    </span>
+                    {c.freeRedeems > 0 && (
+                      <span className="block text-[10px] text-amber-600 font-extrabold mt-0.5">
+                        🎁 แลกฟรีได้ {c.freeRedeems}
+                      </span>
+                    )}
+                  </div>
                 </button>
               ))
             )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* เมื่อเลือกลูกค้าแล้ว - แสดงรายละเอียดชื่อ user ชัดเจนมาก */}
