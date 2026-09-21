@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum TransactionType {
+  EARN
+  REDEEM
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         Role     @default(CUSTOMER)
+  stamps       Int      @default(0) // current stamps (0-9)
+  totalCups    Int      @default(0) // lifetime cups bought (for leaderboard)
+  freeRedeems  Int      @default(0) // total free cups redeemed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  transactions     Transaction[] @relation("UserTransactions")
+  createdByAdmin   Transaction[] @relation("AdminTransactions")
+
+  @@map("users")
+}
+
+model MenuItem {
+  id          String   @id @default(cuid())
+  name        String
+  price       Float
+  category    String   @default("เครื่องดื่ม") // เช่น กาแฟ, ชา, นม, เบเกอรี่
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  transactionItems TransactionItem[]
+
+  @@map("menu_items")
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  userId      String
+  type        TransactionType
+  cups        Int             // cups bought (EARN) or redeemed (REDEEM = always 1)
+  totalAmount Float           @default(0) // total baht spent
+  note        String?
+  createdAt   DateTime        @default(now())
+  createdBy   String          // admin user id
+
+  user  User @relation("UserTransactions", fields: [userId], references: [id])
+  admin User @relation("AdminTransactions", fields: [createdBy], references: [id])
+  items TransactionItem[]
+
+  @@map("transactions")
+}
+
+model TransactionItem {
+  id            String   @id @default(cuid())
+  transactionId String
+  menuItemId    String?
+  name          String   // เก็บชื่อเมนู ณ วันที่ซื้อ (กรณีเมนูถูกแก้ไข/ลบในอนาคต)
+  price         Float    // ราคาต่อแก้ว ณ วันที่ซื้อ
+  quantity      Int      // จำนวนแก้ว
+  subtotal      Float    // ราคารวม (price * quantity)
+  createdAt     DateTime @default(now())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  menuItem    MenuItem?   @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+
+  @@map("transaction_items")
+}
