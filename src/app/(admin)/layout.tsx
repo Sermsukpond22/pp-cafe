@@ -24,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ]
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row w-full max-w-full overflow-x-hidden">
       {/* Desktop Sidebar (จอคอมพิวเตอร์แสดงครบทุกเมนู) */}
       <aside className="hidden md:flex w-64 bg-emerald-800 flex-col min-h-screen fixed top-0 left-0 shadow-lg z-20">
         <div className="px-6 py-6 border-b border-emerald-700/60">
@@ -71,7 +71,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <AdminMobileNav userName={session.name} userRole={session.role} />
 
       {/* Main Content Area */}
-      <main className="flex-1 md:ml-64 pt-16 md:pt-0">
+      <main className="flex-1 w-full max-w-full min-w-0 md:ml-64 pt-16 md:pt-0 overflow-x-hidden">
         {children}
       </main>
     </div>

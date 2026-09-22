@@ -14,10 +14,13 @@ export default async function AdminMenuPage() {
   })
 
   return (
-    <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-800">☕ จัดการเมนูเครื่องดื่ม / สินค้า</h1>
-        <p className="text-sm text-gray-500 mt-1">
+    <div className="p-4 md:p-6 pb-24 max-w-4xl mx-auto w-full min-w-0">
+      <div className="mb-5 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+          <span>☕</span>
+          <span>จัดการเมนูเครื่องดื่ม / สินค้า</span>
+        </h1>
+        <p className="text-xs sm:text-sm text-gray-500 mt-1">
           กำหนดรายการเมนูและราคา เพื่อใช้เลือกตอนให้แต้มและคำนวณยอดขายประจำวัน
         </p>
       </div>

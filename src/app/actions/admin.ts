@@ -177,4 +177,130 @@ export async function updateCustomer(
   return { message: `อัปเดตข้อมูลของ "${name}" เรียบร้อยแล้ว`, success: true }
 }
 
+// ─── Quick Add Customer (Admin & Super Admin) ──────────────────────────────────
+export interface QuickAddCustomerResult {
+  success: boolean
+  message?: string
+  errors?: Record<string, string[]>
+  customer?: {
+    id: string
+    name: string
+    username: string
+    phone: string | null
+    stamps: number
+    freeRedeems: number
+    totalCups: number
+  }
+}
+
+export async function quickAddCustomer(
+  formData: FormData
+): Promise<QuickAddCustomerResult> {
+  const session = await getSession()
+  if (!session || (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) {
+    return { success: false, message: 'ไม่มีสิทธิ์ดำเนินการ' }
+  }
+
+  const name = (formData.get('name') as string)?.trim()
+  const phoneRaw = (formData.get('phone') as string)?.trim()
+
+  if (!name || name.length < 2) {
+    return {
+      success: false,
+      errors: { name: ['กรุณากรอกชื่อลูกค้าอย่างน้อย 2 ตัวอักษร'] },
+      message: 'กรุณากรอกชื่อลูกค้าอย่างน้อย 2 ตัวอักษร',
+    }
+  }
+
+  if (!phoneRaw) {
+    return {
+      success: false,
+      errors: { phone: ['กรุณากรอกเบอร์โทรศัพท์'] },
+      message: 'กรุณากรอกเบอร์โทรศัพท์',
+    }
+  }
+
+  const cleanPhone = phoneRaw.replace(/[\s-]/g, '')
+  if (!/^[0-9]{9,10}$/.test(cleanPhone)) {
+    return {
+      success: false,
+      errors: { phone: ['เบอร์โทรศัพท์ต้องเป็นตัวเลข 9-10 หลัก'] },
+      message: 'เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องเป็นตัวเลข 9-10 หลัก)',
+    }
+  }
+
+  // Check if a customer already exists with this phone number or username
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { phone: cleanPhone },
+        { phone: phoneRaw },
+        { username: cleanPhone },
+      ],
+    },
+    select: {
+      id: true,
+      name: true,
+      username: true,
+      phone: true,
+      stamps: true,
+      freeRedeems: true,
+      totalCups: true,
+    },
+  })
+
+  if (existingUser) {
+    return {
+      success: false,
+      errors: { phone: [`มีลูกค้าชื่อ "${existingUser.name}" ใช้เบอร์นี้แล้ว`] },
+      message: `มีลูกค้าชื่อ "${existingUser.name}" ใช้เบอร์นี้ในระบบแล้ว`,
+      customer: existingUser,
+    }
+  }
+
+  // Determine unique username
+  let username = cleanPhone
+  const existingUsername = await prisma.user.findUnique({
+    where: { username },
+  })
+  if (existingUsername) {
+    username = `c_${cleanPhone}`
+  }
+
+  // Default initial password is the customer's phone number
+  const passwordHash = await bcrypt.hash(cleanPhone, 10)
+
+  const newUser = await prisma.user.create({
+    data: {
+      name,
+      username,
+      phone: cleanPhone,
+      passwordHash,
+      role: 'CUSTOMER',
+      stamps: 0,
+      freeRedeems: 0,
+      totalCups: 0,
+    },
+    select: {
+      id: true,
+      name: true,
+      username: true,
+      phone: true,
+      stamps: true,
+      freeRedeems: true,
+      totalCups: true,
+    },
+  })
+
+  revalidatePath('/admin/add-stamp')
+  revalidatePath('/admin/customers')
+  revalidatePath('/admin/dashboard')
+
+  return {
+    success: true,
+    message: `เพิ่มลูกค้า "${name}" เรียบร้อยแล้ว`,
+    customer: newUser,
+  }
+}
+
 

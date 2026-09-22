@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "db:push": "prisma db push",
-    "db:seed": "node --experimental-strip-types prisma/seed.ts"
+    "db:seed": "node --experimental-strip-types prisma/seed.ts",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "db:local:setup": "powershell -ExecutionPolicy Bypass -File ./setup-local-db.ps1",
+    "db:prod:switch": "powershell -ExecutionPolicy Bypass -File ./switch-to-prod.ps1"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

@@ -92,14 +92,14 @@ export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }
   return (
     <div className="space-y-5">
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between gap-3">
+      <div className="flex flex-col sm:flex-row justify-between gap-2.5 sm:gap-3">
         <div className="flex-1">
           <input
             type="text"
             placeholder="ค้นหาชื่อเมนู..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-4 py-3 rounded-2xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white shadow-2xs"
+            className="w-full px-4 py-2.5 sm:py-3 rounded-2xl border border-gray-200 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white shadow-2xs"
           />
         </div>
         <button
@@ -107,10 +107,10 @@ export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }
             setShowAddForm(!showAddForm)
             setAddErrors(undefined)
           }}
-          className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white px-6 py-3.5 rounded-2xl font-bold text-sm sm:text-base transition shadow-sm"
+          className="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white px-5 py-2.5 sm:py-3.5 rounded-2xl font-bold text-sm sm:text-base transition shadow-sm cursor-pointer shrink-0 whitespace-nowrap"
         >
-          <Plus className="w-5 h-5" />
-          {showAddForm ? 'ปิดฟอร์ม' : '+ เพิ่มเมนูใหม่'}
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span>{showAddForm ? 'ปิดฟอร์ม' : 'เพิ่มเมนูใหม่'}</span>
         </button>
       </div>
 
@@ -264,12 +264,12 @@ export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }
       )}
 
       {/* Category Pills */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none w-full max-w-full min-w-0">
         {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition ${
+            className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition cursor-pointer shrink-0 ${
               selectedCategory === cat
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
@@ -281,7 +281,7 @@ export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }
       </div>
 
       {/* Menu List */}
-      <div className="bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-100 divide-y divide-gray-100">
+      <div className="bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-100 divide-y divide-gray-100 w-full min-w-0">
         {filtered.length === 0 ? (
           <div className="text-center py-14 text-gray-400">
             <Coffee className="w-12 h-12 mx-auto mb-2 opacity-30" />
@@ -291,53 +291,57 @@ export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }
           filtered.map((item) => (
             <div
               key={item.id}
-              className={`p-4 sm:p-5 flex items-center justify-between gap-3 transition ${
+              className={`p-3.5 sm:p-5 flex items-center justify-between gap-2.5 sm:gap-3 transition ${
                 !item.isActive ? 'bg-gray-50/80 opacity-60' : 'hover:bg-emerald-50/40'
               }`}
             >
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="font-bold text-gray-900 text-sm sm:text-base truncate">{item.name}</h4>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <h4 className="font-bold text-gray-900 text-sm sm:text-base truncate">
+                    {item.name}
+                  </h4>
+                  <span className="text-[11px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold shrink-0">
                     {item.category}
                   </span>
                   {!item.isActive && (
-                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 font-bold">
+                    <span className="text-[11px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 font-bold shrink-0">
                       ปิดขาย
                     </span>
                   )}
                 </div>
-                <p className="text-base sm:text-lg font-black text-emerald-700 mt-1">{item.price} ฿</p>
+                <p className="text-sm sm:text-base font-black text-emerald-700 mt-1">
+                  {item.price} ฿
+                </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <button
                   onClick={() => {
                     setEditingItem(item)
                     setEditErrors(undefined)
                   }}
                   title="แก้ไขเมนู"
-                  className="p-2.5 sm:p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 rounded-xl transition"
+                  className="p-2 sm:p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 rounded-xl transition cursor-pointer"
                 >
-                  <Pencil className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Pencil className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleToggle(item.id, item.isActive)}
                   title={item.isActive ? 'ปิดการขาย' : 'เปิดการขาย'}
-                  className={`p-2.5 sm:p-3 rounded-xl border transition ${
+                  className={`p-2 sm:p-2.5 rounded-xl border transition cursor-pointer ${
                     item.isActive
                       ? 'border-gray-200 text-gray-400 hover:text-amber-600 hover:bg-amber-50'
                       : 'border-emerald-200 text-emerald-600 bg-emerald-50'
                   }`}
                 >
-                  <Power className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Power className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(item.id, item.name)}
                   title="ลบเมนู"
-                  className="p-2.5 sm:p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-200 rounded-xl transition"
+                  className="p-2 sm:p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-200 rounded-xl transition cursor-pointer"
                 >
-                  <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>

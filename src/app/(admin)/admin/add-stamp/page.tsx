@@ -43,10 +43,13 @@ export default async function AddStampPage({
 
   return (
     <div className="p-4 md:p-6 pb-24 md:pb-6 max-w-xl mx-auto">
-      <div className="mb-5">
-        <h1 className="text-xl font-bold text-gray-800">☕ ให้แต้มลูกค้า & บันทึกการขาย</h1>
-        <p className="text-xs text-gray-500 mt-1">
-          เลือกเมนูเครื่องดื่มที่ลูกค้าซื้อเพื่อสะสมแต้มและบันทึกยอดขายประจำวัน
+      <div className="mb-4 sm:mb-5">
+        <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+          <span>☕</span>
+          <span>ให้แต้มลูกค้า & บันทึกการขาย</span>
+        </h1>
+        <p className="text-xs sm:text-sm text-gray-500 mt-1">
+          เลือกลูกค้าและเมนูเครื่องดื่มเพื่อสะสมแต้มและบันทึกยอดขาย
         </p>
       </div>
       <AddStampForm
