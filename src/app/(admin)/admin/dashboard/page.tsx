@@ -2,13 +2,14 @@ import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { getBangkokTodayStart } from '@/lib/utils'
 
 export default async function AdminDashboardPage() {
   const session = await getSession()
   if (!session || (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) redirect('/login')
 
   const STAMPS_REQUIRED = Number(process.env.STAMPS_REQUIRED ?? 10)
-  const todayStart = new Date(new Date().setHours(0, 0, 0, 0))
+  const todayStart = getBangkokTodayStart()
 
   // Stats
   const [
@@ -176,7 +177,7 @@ export default async function AdminDashboardPage() {
             <span className="text-3xl">☕</span>
             <p className="text-base font-bold text-gray-600 mt-2">ยังไม่มีการขายเมนูในวันนี้</p>
             <p className="text-xs sm:text-sm text-gray-400 mt-1">
-              เมื่อบันทึกการขายที่หน้า "ให้แต้ม" ข้อมูลจะสรุปที่นี่ทันที
+              เมื่อบันทึกการขายที่หน้า &quot;ให้แต้ม&quot; ข้อมูลจะสรุปที่นี่ทันที
             </p>
           </div>
         ) : (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import QRCode from 'qrcode'
 import { QrCode, Download, Printer, Copy, Check } from 'lucide-react'
 
@@ -9,14 +9,7 @@ export default function StoreQRCode() {
   const [qrDataUrl, setQrDataUrl] = useState('')
   const [copied, setCopied] = useState(false)
 
-  useEffect(() => {
-    // Default to window origin or current domain
-    const defaultUrl = `${window.location.origin}/register`
-    setUrl(defaultUrl)
-    generateQR(defaultUrl)
-  }, [])
-
-  const generateQR = async (link: string) => {
+  const generateQR = useCallback(async (link: string) => {
     try {
       const dataUrl = await QRCode.toDataURL(link, {
         width: 320,
@@ -30,7 +23,17 @@ export default function StoreQRCode() {
     } catch (err) {
       console.error(err)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    // Default to window origin or current domain
+    const defaultUrl = `${window.location.origin}/register`
+    const timer = setTimeout(() => {
+      setUrl(defaultUrl)
+      void generateQR(defaultUrl)
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [generateQR])
 
   const handleUrlChange = (newUrl: string) => {
     setUrl(newUrl)

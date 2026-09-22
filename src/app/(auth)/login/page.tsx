@@ -32,14 +32,14 @@ export default function LoginPage() {
           <form action={action} className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                ชื่อผู้ใช้
+                ชื่อผู้ใช้ หรือ เบอร์โทรศัพท์
               </label>
               <input
                 id="username"
                 name="username"
                 type="text"
                 autoComplete="username"
-                placeholder="กรอกชื่อผู้ใช้"
+                placeholder="กรอกชื่อผู้ใช้ หรือ เบอร์โทรศัพท์"
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition"
               />
               {state?.errors?.username && (

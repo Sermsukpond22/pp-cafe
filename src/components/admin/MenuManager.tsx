@@ -1,9 +1,14 @@
 'use client'
 
-import { useState, useActionState, useEffect } from 'react'
-import { createMenuItem, toggleMenuItem, deleteMenuItem } from '@/app/actions/menu'
+import { useState, useTransition } from 'react'
+import {
+  createMenuItem,
+  updateMenuItem,
+  toggleMenuItem,
+  deleteMenuItem,
+} from '@/app/actions/menu'
 import toast from 'react-hot-toast'
-import { Plus, Coffee, Trash2, Power } from 'lucide-react'
+import { Plus, Coffee, Trash2, Power, Pencil, X } from 'lucide-react'
 
 interface MenuItem {
   id: string
@@ -14,19 +19,15 @@ interface MenuItem {
 }
 
 export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }) {
-  const [state, action, pending] = useActionState(createMenuItem, undefined)
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
 
-  useEffect(() => {
-    if (state?.success) {
-      toast.success(state.message || 'บันทึกสำเร็จ')
-      setShowAddForm(false)
-    } else if (state?.message) {
-      toast.error(state.message)
-    }
-  }, [state])
+  const [addErrors, setAddErrors] = useState<Record<string, string[]> | undefined>()
+  const [editErrors, setEditErrors] = useState<Record<string, string[]> | undefined>()
+
+  const [isPending, startTransition] = useTransition()
 
   const categories = ['ทั้งหมด', ...Array.from(new Set(initialMenu.map((m) => m.category)))]
 
@@ -36,23 +37,55 @@ export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }
     return matchSearch && matchCategory
   })
 
-  const handleToggle = async (id: string, current: boolean) => {
-    try {
-      await toggleMenuItem(id, current)
-      toast.success(current ? 'ปิดการขายเมนูนี้แล้ว' : 'เปิดการขายเมนูนี้แล้ว')
-    } catch {
-      toast.error('เกิดข้อผิดพลาด')
-    }
+  const handleCreate = (formData: FormData) => {
+    startTransition(async () => {
+      const res = await createMenuItem(undefined, formData)
+      if (res?.success) {
+        toast.success(res.message || 'บันทึกสำเร็จ')
+        setShowAddForm(false)
+        setAddErrors(undefined)
+      } else {
+        if (res?.errors) setAddErrors(res.errors)
+        if (res?.message) toast.error(res.message)
+      }
+    })
   }
 
-  const handleDelete = async (id: string, name: string) => {
-    if (confirm(`คุณต้องการลบเมนู "${name}" ใช่หรือไม่?`)) {
-      try {
-        await deleteMenuItem(id)
-        toast.success(`ลบเมนู "${name}" แล้ว`)
-      } catch {
-        toast.error('เกิดข้อผิดพลาดในการลบ')
+  const handleUpdate = (formData: FormData) => {
+    startTransition(async () => {
+      const res = await updateMenuItem(undefined, formData)
+      if (res?.success) {
+        toast.success(res.message || 'แก้ไขเมนูสำเร็จ')
+        setEditingItem(null)
+        setEditErrors(undefined)
+      } else {
+        if (res?.errors) setEditErrors(res.errors)
+        if (res?.message) toast.error(res.message)
       }
+    })
+  }
+
+  const handleToggle = (id: string, current: boolean) => {
+    startTransition(async () => {
+      try {
+        await toggleMenuItem(id, current)
+        toast.success(current ? 'ปิดการขายเมนูนี้แล้ว' : 'เปิดการขายเมนูนี้แล้ว')
+      } catch {
+        toast.error('เกิดข้อผิดพลาด')
+      }
+    })
+  }
+
+  const handleDelete = (id: string, name: string) => {
+    if (confirm(`คุณต้องการลบเมนู "${name}" ใช่หรือไม่?`)) {
+      startTransition(async () => {
+        try {
+          await deleteMenuItem(id)
+          toast.success(`ลบเมนู "${name}" แล้ว`)
+        } catch {
+          toast.error('เกิดข้อผิดพลาดในการลบ')
+        }
+      })
     }
   }
 
@@ -70,7 +103,10 @@ export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }
           />
         </div>
         <button
-          onClick={() => setShowAddForm(!showAddForm)}
+          onClick={() => {
+            setShowAddForm(!showAddForm)
+            setAddErrors(undefined)
+          }}
           className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white px-6 py-3.5 rounded-2xl font-bold text-sm sm:text-base transition shadow-sm"
         >
           <Plus className="w-5 h-5" />
@@ -80,7 +116,7 @@ export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }
 
       {/* Add Form */}
       {showAddForm && (
-        <form action={action} className="bg-white rounded-3xl shadow-sm border-2 border-emerald-100 p-5 sm:p-6 space-y-4">
+        <form action={handleCreate} className="bg-white rounded-3xl shadow-sm border-2 border-emerald-100 p-5 sm:p-6 space-y-4">
           <h3 className="font-black text-gray-900 text-base sm:text-lg flex items-center gap-2">
             <Coffee className="w-5 h-5 text-emerald-600" /> เพิ่มเมนูใหม่เข้าร้าน
           </h3>
@@ -93,7 +129,7 @@ export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }
                 required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:ring-2 focus:ring-emerald-400 outline-none"
               />
-              {state?.errors?.name && <p className="text-red-500 text-xs mt-1">{state.errors.name[0]}</p>}
+              {addErrors?.name && <p className="text-red-500 text-xs mt-1">{addErrors.name[0]}</p>}
             </div>
             <div>
               <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">ราคา (บาท) *</label>
@@ -106,7 +142,7 @@ export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }
                 required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:ring-2 focus:ring-emerald-400 outline-none"
               />
-              {state?.errors?.price && <p className="text-red-500 text-xs mt-1">{state.errors.price[0]}</p>}
+              {addErrors?.price && <p className="text-red-500 text-xs mt-1">{addErrors.price[0]}</p>}
             </div>
             <div>
               <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">หมวดหมู่ *</label>
@@ -117,26 +153,114 @@ export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }
                 required
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:ring-2 focus:ring-emerald-400 outline-none"
               />
-              {state?.errors?.category && <p className="text-red-500 text-xs mt-1">{state.errors.category[0]}</p>}
+              {addErrors?.category && <p className="text-red-500 text-xs mt-1">{addErrors.category[0]}</p>}
             </div>
           </div>
           <div className="flex justify-end gap-2.5 pt-2">
             <button
               type="button"
-              onClick={() => setShowAddForm(false)}
+              onClick={() => {
+                setShowAddForm(false)
+                setAddErrors(undefined)
+              }}
               className="px-5 py-2.5 text-sm sm:text-base text-gray-500 hover:text-gray-700 font-bold"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
-              disabled={pending}
+              disabled={isPending}
               className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white font-black px-6 py-2.5 rounded-xl text-sm sm:text-base transition shadow-sm"
             >
-              {pending ? 'กำลังบันทึก...' : 'บันทึกเมนู'}
+              {isPending ? 'กำลังบันทึก...' : 'บันทึกเมนู'}
             </button>
           </div>
         </form>
+      )}
+
+      {/* Edit Modal */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 w-full max-w-lg space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-gray-900 text-base sm:text-lg flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-emerald-600" /> แก้ไขเมนู
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingItem(null)
+                  setEditErrors(undefined)
+                }}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form action={handleUpdate} className="space-y-4">
+              <input type="hidden" name="id" value={editingItem.id} />
+
+              <div>
+                <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">ชื่อเมนู *</label>
+                <input
+                  name="name"
+                  defaultValue={editingItem.name}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:ring-2 focus:ring-emerald-400 outline-none"
+                />
+                {editErrors?.name && <p className="text-red-500 text-xs mt-1">{editErrors.name[0]}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">ราคา (บาท) *</label>
+                  <input
+                    name="price"
+                    type="number"
+                    step="any"
+                    min="0"
+                    defaultValue={editingItem.price}
+                    required
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:ring-2 focus:ring-emerald-400 outline-none"
+                  />
+                  {editErrors?.price && <p className="text-red-500 text-xs mt-1">{editErrors.price[0]}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">หมวดหมู่ *</label>
+                  <input
+                    name="category"
+                    defaultValue={editingItem.category}
+                    required
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:ring-2 focus:ring-emerald-400 outline-none"
+                  />
+                  {editErrors?.category && <p className="text-red-500 text-xs mt-1">{editErrors.category[0]}</p>}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingItem(null)
+                    setEditErrors(undefined)
+                  }}
+                  className="px-5 py-2.5 text-sm sm:text-base text-gray-500 hover:text-gray-700 font-bold"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white font-black px-6 py-2.5 rounded-xl text-sm sm:text-base transition shadow-sm"
+                >
+                  {isPending ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Category Pills */}
@@ -187,6 +311,16 @@ export default function MenuManager({ initialMenu }: { initialMenu: MenuItem[] }
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setEditingItem(item)
+                    setEditErrors(undefined)
+                  }}
+                  title="แก้ไขเมนู"
+                  className="p-2.5 sm:p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 rounded-xl transition"
+                >
+                  <Pencil className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
                 <button
                   onClick={() => handleToggle(item.id, item.isActive)}
                   title={item.isActive ? 'ปิดการขาย' : 'เปิดการขาย'}

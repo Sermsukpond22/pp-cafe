@@ -5,7 +5,12 @@ import AddStampForm from '@/components/admin/AddStampForm'
 
 const STAMPS_REQUIRED = Number(process.env.STAMPS_REQUIRED ?? 10)
 
-export default async function AddStampPage() {
+export default async function AddStampPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ userId?: string }>
+}) {
+  const { userId } = await searchParams
   const session = await getSession()
   if (!session || (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) redirect('/login')
 
@@ -48,6 +53,7 @@ export default async function AddStampPage() {
         customers={customers}
         menuItems={menuItems}
         stampsRequired={STAMPS_REQUIRED}
+        initialUserId={userId}
       />
     </div>
   )

@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import StampCard from '@/components/customer/StampCard'
+import DeleteCustomerButton from '@/components/admin/DeleteCustomerButton'
+import EditCustomerButton from '@/components/admin/EditCustomerButton'
 import { formatDate } from '@/lib/utils'
 
 const STAMPS_REQUIRED = Number(process.env.STAMPS_REQUIRED ?? 10)
@@ -55,15 +57,18 @@ export default async function CustomerDetailPage({
 
       {/* Profile */}
       <div className="bg-white rounded-2xl shadow-sm p-5 mb-4 border border-gray-100">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold text-xl">
-            {customer.name.charAt(0)}
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold text-xl">
+              {customer.name.charAt(0)}
+            </div>
+            <div>
+              <h2 className="font-bold text-gray-900 text-lg">{customer.name}</h2>
+              <p className="text-gray-500 text-sm">@{customer.username}</p>
+              {customer.phone && <p className="text-gray-400 text-sm">📞 {customer.phone}</p>}
+            </div>
           </div>
-          <div>
-            <h2 className="font-bold text-gray-900 text-lg">{customer.name}</h2>
-            <p className="text-gray-500 text-sm">@{customer.username}</p>
-            {customer.phone && <p className="text-gray-400 text-sm">📞 {customer.phone}</p>}
-          </div>
+          <EditCustomerButton customer={customer} />
         </div>
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="bg-emerald-50 rounded-xl p-3">
@@ -91,11 +96,18 @@ export default async function CustomerDetailPage({
 
       {/* Give Stamps Button */}
       <Link
-        href={`/admin/add-stamp`}
-        className="block w-full bg-emerald-600 text-white text-center font-semibold py-3 rounded-xl hover:bg-emerald-700 transition mb-4 shadow-sm"
+        href={`/admin/add-stamp?userId=${customer.id}`}
+        className="block w-full bg-emerald-600 text-white text-center font-semibold py-3 rounded-xl hover:bg-emerald-700 transition mb-3 shadow-sm"
       >
         ☕ ให้แต้มลูกค้านี้
       </Link>
+
+      {/* Super Admin Delete Button */}
+      {session.role === 'SUPER_ADMIN' && (
+        <div className="mb-4">
+          <DeleteCustomerButton customerId={customer.id} customerName={customer.name} />
+        </div>
+      )}
 
       {/* Transactions */}
       <div className="bg-white rounded-2xl shadow-sm p-4 border border-gray-100">

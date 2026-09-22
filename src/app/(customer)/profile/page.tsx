@@ -1,6 +1,7 @@
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { logout } from '@/app/actions/auth'
 import { formatDate } from '@/lib/utils'
 
@@ -21,7 +22,7 @@ export default async function ProfilePage() {
   return (
     <div className="min-h-screen bg-emerald-50">
       <header className="bg-emerald-600 text-white px-4 py-4 flex items-center gap-3">
-        <a href="/dashboard" className="text-emerald-200 hover:text-white">←</a>
+        <Link href="/dashboard" className="text-emerald-200 hover:text-white">←</Link>
         <h1 className="text-lg font-bold">โปรไฟล์</h1>
       </header>
 

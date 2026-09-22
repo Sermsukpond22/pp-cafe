@@ -2,8 +2,9 @@
 
 import bcrypt from 'bcryptjs'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
-import { createSession, deleteSession } from '@/lib/session'
+import { createSession, deleteSession, getSession } from '@/lib/session'
 import { RegisterSchema, LoginSchema, AddCustomerSchema } from '@/lib/validations'
 
 export type ActionState = {
@@ -75,26 +76,44 @@ export async function login(
     return { errors: validated.error.flatten().fieldErrors }
   }
 
-  const { username, password } = validated.data
+  const { username: identifier, password } = validated.data
+  const cleanPhone = identifier.replace(/[\s-]/g, '')
 
-  const user = await prisma.user.findUnique({ where: { username } })
-  if (!user) {
+  const users = await prisma.user.findMany({
+    where: {
+      OR: [
+        { username: identifier },
+        { phone: identifier },
+        ...(cleanPhone ? [{ phone: cleanPhone }] : []),
+      ],
+    },
+  })
+
+  if (users.length === 0) {
     return { message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' }
   }
 
-  const passwordMatch = await bcrypt.compare(password, user.passwordHash)
-  if (!passwordMatch) {
+  let matchedUser = null
+  for (const u of users) {
+    const passwordMatch = await bcrypt.compare(password, u.passwordHash)
+    if (passwordMatch) {
+      matchedUser = u
+      break
+    }
+  }
+
+  if (!matchedUser) {
     return { message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' }
   }
 
   await createSession({
-    userId: user.id,
-    role: user.role,
-    username: user.username,
-    name: user.name,
+    userId: matchedUser.id,
+    role: matchedUser.role,
+    username: matchedUser.username,
+    name: matchedUser.name,
   })
 
-  if (user.role === 'CUSTOMER') {
+  if (matchedUser.role === 'CUSTOMER') {
     redirect('/dashboard')
   } else {
     redirect('/admin/dashboard')
@@ -112,6 +131,11 @@ export async function addCustomer(
   state: ActionState | undefined,
   formData: FormData
 ): Promise<ActionState> {
+  const session = await getSession()
+  if (!session || (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) {
+    return { message: 'ไม่มีสิทธิ์ดำเนินการ' }
+  }
+
   const raw = {
     username: formData.get('username'),
     name: formData.get('name'),
@@ -142,6 +166,8 @@ export async function addCustomer(
       role: 'CUSTOMER',
     },
   })
+
+  revalidatePath('/admin/customers')
 
   return { message: 'เพิ่มลูกค้าสำเร็จ' }
 }

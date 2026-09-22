@@ -50,6 +50,47 @@ export async function createMenuItem(
   return { message: 'เพิ่มเมนูสำเร็จ', success: true }
 }
 
+const UpdateMenuItemSchema = z.object({
+  id: z.string().min(1, 'ไม่พบรหัสเมนู'),
+  name: z.string().min(1, 'กรุณาระบุชื่อเมนู').trim(),
+  price: z.coerce.number().min(0, 'ราคาต้องไม่ติดลบ'),
+  category: z.string().min(1, 'กรุณาระบุหมวดหมู่').trim(),
+})
+
+export async function updateMenuItem(
+  prevState: ActionState | undefined,
+  formData: FormData
+): Promise<ActionState> {
+  const session = await getSession()
+  if (!session || (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) {
+    return { message: 'ไม่มีสิทธิ์ดำเนินการ' }
+  }
+
+  const validated = UpdateMenuItemSchema.safeParse({
+    id: formData.get('id'),
+    name: formData.get('name'),
+    price: formData.get('price'),
+    category: formData.get('category'),
+  })
+
+  if (!validated.success) {
+    return { errors: validated.error.flatten().fieldErrors }
+  }
+
+  await prisma.menuItem.update({
+    where: { id: validated.data.id },
+    data: {
+      name: validated.data.name,
+      price: validated.data.price,
+      category: validated.data.category,
+    },
+  })
+
+  revalidatePath('/admin/menu')
+  revalidatePath('/admin/add-stamp')
+  return { message: 'แก้ไขเมนูสำเร็จ', success: true }
+}
+
 export async function toggleMenuItem(id: string, currentStatus: boolean) {
   const session = await getSession()
   if (!session || (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) {

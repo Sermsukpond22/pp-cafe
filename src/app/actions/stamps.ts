@@ -42,7 +42,7 @@ export async function addStamps(
   }
 
   let cups = Number(formData.get('cups') || 0)
-  let totalAmount = 0
+  let totalAmount = Number(formData.get('totalAmount') || 0)
 
   if (items.length > 0) {
     cups = items.reduce((sum, item) => sum + item.quantity, 0)
@@ -58,11 +58,9 @@ export async function addStamps(
 
   // คำนวณแต้มและการแลกฟรีอัตโนมัติ (ถ้าแต้มรวม >= STAMPS_REQUIRED)
   let newStamps = user.stamps + cups
-  let newFreeRedeems = user.freeRedeems
   const autoRedeems = Math.floor(newStamps / STAMPS_REQUIRED)
 
   if (autoRedeems > 0) {
-    newFreeRedeems += autoRedeems
     newStamps = newStamps % STAMPS_REQUIRED
   }
 
@@ -91,6 +89,17 @@ export async function addStamps(
           subtotal: item.price * item.quantity,
         })),
       })
+    } else if (cups > 0) {
+      await tx.transactionItem.create({
+        data: {
+          transactionId: transaction.id,
+          menuItemId: null,
+          name: note || 'เครื่องดื่ม (ระบุแก้วเอง)',
+          price: Math.round(totalAmount / cups),
+          quantity: cups,
+          subtotal: totalAmount,
+        },
+      })
     }
 
     // อัปเดตแต้มของลูกค้า
@@ -99,7 +108,7 @@ export async function addStamps(
       data: {
         stamps: newStamps,
         totalCups: { increment: cups },
-        freeRedeems: newFreeRedeems,
+        ...(autoRedeems > 0 ? { freeRedeems: { increment: autoRedeems } } : {}),
       },
     })
   })
@@ -138,23 +147,39 @@ export async function redeemFreeCup(
     return { message: 'ลูกค้าไม่มีสิทธิ์แลกน้ำฟรี' }
   }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.transaction.create({
-      data: {
-        userId,
-        type: 'REDEEM',
-        cups: 1,
-        totalAmount: 0,
-        note: 'แลกเครื่องดื่มฟรี 1 แก้ว',
-        createdBy: session.userId,
-      },
-    })
+  try {
+    await prisma.$transaction(async (tx) => {
+      const updateResult = await tx.user.updateMany({
+        where: {
+          id: userId,
+          freeRedeems: { gt: 0 },
+        },
+        data: {
+          freeRedeems: { decrement: 1 },
+        },
+      })
 
-    await tx.user.update({
-      where: { id: userId },
-      data: { freeRedeems: { decrement: 1 } },
+      if (updateResult.count === 0) {
+        throw new Error('INSUFFICIENT_FREE_REDEEMS')
+      }
+
+      await tx.transaction.create({
+        data: {
+          userId,
+          type: 'REDEEM',
+          cups: 1,
+          totalAmount: 0,
+          note: 'แลกเครื่องดื่มฟรี 1 แก้ว',
+          createdBy: session.userId,
+        },
+      })
     })
-  })
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === 'INSUFFICIENT_FREE_REDEEMS') {
+      return { message: 'ลูกค้าไม่มีสิทธิ์แลกน้ำฟรี' }
+    }
+    throw error
+  }
 
   revalidatePath('/admin/dashboard')
   revalidatePath('/admin/transactions')

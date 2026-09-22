@@ -12,10 +12,15 @@ const superAdminRoutes = ['/admin/manage-admins']
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Ignore static public assets unconditionally
+  if (/\.(svg|png|jpg|jpeg|gif|webp|ico)$/i.test(pathname)) {
+    return NextResponse.next()
+  }
+
   const sessionCookie = request.cookies.get('session')?.value
   const session = await decrypt(sessionCookie)
 
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
+  const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))
 
   // Not logged in → redirect to login (except public routes)
   if (!session && !isPublicRoute) {
@@ -55,5 +60,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+  ],
 }

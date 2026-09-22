@@ -28,7 +28,7 @@ export const RegisterSchema = z
   })
 
 export const LoginSchema = z.object({
-  username: z.string().min(1, { message: 'กรุณากรอกชื่อผู้ใช้' }).trim(),
+  username: z.string().min(1, { message: 'กรุณากรอกชื่อผู้ใช้หรือเบอร์โทรศัพท์' }).trim(),
   password: z.string().min(1, { message: 'กรุณากรอกรหัสผ่าน' }),
 })
 

@@ -3,7 +3,6 @@
 import { useActionState, useState, useEffect } from 'react'
 import { setAdminRole } from '@/app/actions/admin'
 import toast from 'react-hot-toast'
-import { formatDate } from '@/lib/utils'
 
 interface User {
   id: string

@@ -1,9 +1,9 @@
 'use client'
 
-import { useActionState, useState, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import { addStamps, redeemFreeCup } from '@/app/actions/stamps'
 import toast from 'react-hot-toast'
-import { Plus, Minus, Trash2, Coffee, ShoppingBag, User, Phone, CheckCircle } from 'lucide-react'
+import { Plus, Minus, Trash2, Coffee, ShoppingBag, User, Phone } from 'lucide-react'
 
 interface Customer {
   id: string
@@ -34,21 +34,38 @@ interface Props {
   customers: Customer[]
   menuItems: MenuItem[]
   stampsRequired: number
+  initialUserId?: string
 }
 
-export default function AddStampForm({ customers, menuItems, stampsRequired }: Props) {
-  const [stampState, stampAction, stampPending] = useActionState(addStamps, undefined)
-  const [redeemState, redeemAction, redeemPending] = useActionState(redeemFreeCup, undefined)
+export default function AddStampForm({
+  customers,
+  menuItems,
+  stampsRequired,
+  initialUserId,
+}: Props) {
+  const [stampPending, startStampTransition] = useTransition()
+  const [redeemPending, startRedeemTransition] = useTransition()
 
   const [searchCustomer, setSearchCustomer] = useState('')
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(() => {
+    if (initialUserId) {
+      return customers.find((c) => c.id === initialUserId) || null
+    }
+    return null
+  })
 
   // Mode: 'menu' | 'manual'
   const [entryMode, setEntryMode] = useState<'menu' | 'manual'>('menu')
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด')
   const [cart, setCart] = useState<CartItem[]>([])
   const [manualCups, setManualCups] = useState(1)
+  const [manualPricePerCup, setManualPricePerCup] = useState(50)
   const [note, setNote] = useState('')
+
+  // Keep customer data up to date when customers list revalidates
+  const activeCustomer = selectedCustomer
+    ? customers.find((c) => c.id === selectedCustomer.id) || selectedCustomer
+    : null
 
   // Filter customers by name, username, or phone
   const filteredCustomers = customers.filter(
@@ -74,30 +91,40 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
   const totalAmount =
     entryMode === 'menu'
       ? cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-      : 0
+      : manualCups * manualPricePerCup
 
-  useEffect(() => {
-    if (stampState?.success) {
-      toast.success(stampState.message || 'บันทึกสำเร็จ!', { duration: 4500 })
-      setCart([])
-      setManualCups(1)
-      setNote('')
-      if (selectedCustomer) {
-        const found = customers.find((c) => c.id === selectedCustomer.id)
-        if (found) setSelectedCustomer(found)
+  const handleStampAction = (formData: FormData) => {
+    startStampTransition(async () => {
+      const res = await addStamps(undefined, formData)
+      if (res?.success) {
+        toast.success(res.message || 'บันทึกสำเร็จ!', { duration: 4500 })
+        setCart([])
+        setManualCups(1)
+        setNote('')
+        if (selectedCustomer) {
+          const found = customers.find((c) => c.id === selectedCustomer.id)
+          if (found) setSelectedCustomer(found)
+        }
+      } else if (res?.message) {
+        toast.error(res.message)
       }
-    } else if (stampState?.message) {
-      toast.error(stampState.message)
-    }
-  }, [stampState])
+    })
+  }
 
-  useEffect(() => {
-    if (redeemState?.success) {
-      toast.success(redeemState.message || 'แลกน้ำฟรีสำเร็จ!')
-    } else if (redeemState?.message) {
-      toast.error(redeemState.message)
-    }
-  }, [redeemState])
+  const handleRedeemAction = (formData: FormData) => {
+    startRedeemTransition(async () => {
+      const res = await redeemFreeCup(undefined, formData)
+      if (res?.success) {
+        toast.success(res.message || 'แลกน้ำฟรีสำเร็จ!')
+        if (selectedCustomer) {
+          const found = customers.find((c) => c.id === selectedCustomer.id)
+          if (found) setSelectedCustomer(found)
+        }
+      } else if (res?.message) {
+        toast.error(res.message)
+      }
+    })
+  }
 
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
@@ -208,31 +235,31 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
       </div>
 
       {/* เมื่อเลือกลูกค้าแล้ว - แสดงรายละเอียดชื่อ user ชัดเจนมาก */}
-      {selectedCustomer && (
+      {activeCustomer && (
         <>
           {/* Card แสดงสถานะและชื่อลูกค้าอย่างเด่นชัด */}
           <div className="bg-emerald-50 border-2 border-emerald-300 rounded-3xl p-5 shadow-xs relative">
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-3.5">
                 <div className="w-14 h-14 rounded-2xl bg-emerald-700 text-white font-black text-2xl flex items-center justify-center shadow-xs">
-                  {selectedCustomer.name.charAt(0).toUpperCase()}
+                  {activeCustomer.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-black text-gray-900 text-lg sm:text-xl">
-                      {selectedCustomer.name}
+                      {activeCustomer.name}
                     </h3>
                     <span className="bg-emerald-200/90 text-emerald-900 text-xs font-black px-2.5 py-0.5 rounded-full">
-                      @{selectedCustomer.username}
+                      @{activeCustomer.username}
                     </span>
                   </div>
                   <p className="text-emerald-800 text-xs sm:text-sm font-medium mt-1 flex items-center gap-2 flex-wrap">
-                    {selectedCustomer.phone && (
+                    {activeCustomer.phone && (
                       <span className="flex items-center gap-1 font-semibold">
-                        <Phone className="w-3.5 h-3.5 text-emerald-600" /> {selectedCustomer.phone}
+                        <Phone className="w-3.5 h-3.5 text-emerald-600" /> {activeCustomer.phone}
                       </span>
                     )}
-                    <span>· ยอดซื้อสะสม {selectedCustomer.totalCups} แก้ว</span>
+                    <span>· ยอดซื้อสะสม {activeCustomer.totalCups} แก้ว</span>
                   </p>
                 </div>
               </div>
@@ -252,7 +279,7 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
                 <span
                   key={i}
                   className={`text-xl transition-all ${
-                    i < selectedCustomer.stamps ? 'opacity-100 scale-105' : 'opacity-20'
+                    i < activeCustomer.stamps ? 'opacity-100 scale-105' : 'opacity-20'
                   }`}
                 >
                   ☕
@@ -262,23 +289,23 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
 
             <div className="flex items-center justify-between text-xs sm:text-sm text-emerald-900 font-bold mt-2">
               <span>
-                แต้มปัจจุบัน: <strong className="text-emerald-700 text-sm sm:text-base">{selectedCustomer.stamps}/{stampsRequired} แก้ว</strong>
+                แต้มปัจจุบัน: <strong className="text-emerald-700 text-sm sm:text-base">{activeCustomer.stamps}/{stampsRequired} แก้ว</strong>
               </span>
-              {selectedCustomer.freeRedeems > 0 && (
+              {activeCustomer.freeRedeems > 0 && (
                 <span className="bg-amber-100 border border-amber-300 text-amber-800 font-extrabold px-3 py-1 rounded-full text-xs animate-pulse">
-                  🎁 มีสิทธิ์แลกฟรี {selectedCustomer.freeRedeems} แก้ว!
+                  🎁 มีสิทธิ์แลกฟรี {activeCustomer.freeRedeems} แก้ว!
                 </span>
               )}
             </div>
           </div>
 
           {/* ปุ่มแลกน้ำฟรี ถ้ามีสิทธิ์ */}
-          {selectedCustomer.freeRedeems > 0 && (
-            <form action={redeemAction} className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-xs">
-              <input type="hidden" name="userId" value={selectedCustomer.id} />
+          {activeCustomer.freeRedeems > 0 && (
+            <form action={handleRedeemAction} className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-xs">
+              <input type="hidden" name="userId" value={activeCustomer.id} />
               <div>
-                <p className="font-black text-amber-950 text-sm sm:text-base">🎁 สิทธิ์แลกน้ำฟรีของ {selectedCustomer.name}</p>
-                <p className="text-xs sm:text-sm text-amber-800 font-medium">มีสิทธิ์แลกฟรีคงเหลือ {selectedCustomer.freeRedeems} แก้ว</p>
+                <p className="font-black text-amber-950 text-sm sm:text-base">🎁 สิทธิ์แลกน้ำฟรีของ {activeCustomer.name}</p>
+                <p className="text-xs sm:text-sm text-amber-800 font-medium">มีสิทธิ์แลกฟรีคงเหลือ {activeCustomer.freeRedeems} แก้ว</p>
               </div>
               <button
                 type="submit"
@@ -418,24 +445,62 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
               </div>
             ) : (
               /* Mode B: ระบุจำนวนแก้วเอง */
-              <div className="p-6 bg-slate-50 rounded-2xl text-center space-y-3 border border-slate-200">
-                <label className="text-sm font-bold text-gray-700">จำนวนแก้วทั้งหมดที่ซื้อ</label>
-                <div className="flex items-center justify-center gap-5">
-                  <button
-                    type="button"
-                    onClick={() => setManualCups(Math.max(1, manualCups - 1))}
-                    className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-300 text-gray-800 font-black text-2xl hover:bg-gray-100 active:scale-95 shadow-xs"
-                  >
-                    −
-                  </button>
-                  <span className="text-4xl sm:text-5xl font-black text-emerald-700 w-20">{manualCups}</span>
-                  <button
-                    type="button"
-                    onClick={() => setManualCups(manualCups + 1)}
-                    className="w-14 h-14 rounded-2xl bg-emerald-600 text-white font-black text-2xl hover:bg-emerald-700 active:scale-95 shadow-xs"
-                  >
-                    +
-                  </button>
+              <div className="p-6 bg-slate-50 rounded-2xl text-center space-y-4 border border-slate-200">
+                <div>
+                  <label className="text-sm font-bold text-gray-700 block mb-2">จำนวนแก้วทั้งหมดที่ซื้อ</label>
+                  <div className="flex items-center justify-center gap-5">
+                    <button
+                      type="button"
+                      onClick={() => setManualCups(Math.max(1, manualCups - 1))}
+                      className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-300 text-gray-800 font-black text-2xl hover:bg-gray-100 active:scale-95 shadow-xs"
+                    >
+                      −
+                    </button>
+                    <span className="text-4xl sm:text-5xl font-black text-emerald-700 w-20">{manualCups}</span>
+                    <button
+                      type="button"
+                      onClick={() => setManualCups(manualCups + 1)}
+                      className="w-14 h-14 rounded-2xl bg-emerald-600 text-white font-black text-2xl hover:bg-emerald-700 active:scale-95 shadow-xs"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-200/80">
+                  <label className="text-xs font-bold text-gray-600 block mb-2">ราคาต่อแก้ว (บาท)</label>
+                  <div className="flex items-center justify-center gap-2 flex-wrap">
+                    {[40, 45, 50, 55, 60].map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setManualPricePerCup(p)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                          manualPricePerCup === p
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {p}฿
+                      </button>
+                    ))}
+                    <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-2 py-1">
+                      <input
+                        type="number"
+                        min="0"
+                        value={manualPricePerCup}
+                        onChange={(e) => setManualPricePerCup(Math.max(0, Number(e.target.value)))}
+                        className="w-14 text-center font-bold text-sm text-gray-800 outline-none"
+                      />
+                      <span className="text-xs text-gray-500 font-medium">฿</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    รวม {manualCups} แก้ว × {manualPricePerCup} ฿ ={' '}
+                    <strong className="text-emerald-700 font-bold">
+                      {(manualCups * manualPricePerCup).toLocaleString()} บาท
+                    </strong>
+                  </p>
                 </div>
               </div>
             )}
@@ -445,7 +510,7 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
               <div>
                 <p className="text-xs sm:text-sm text-emerald-200 font-semibold flex items-center gap-1.5">
                   <span>กำลังบันทึกให้:</span>
-                  <strong className="text-white underline">{selectedCustomer.name} (@{selectedCustomer.username})</strong>
+                  <strong className="text-white underline">{activeCustomer.name} (@{activeCustomer.username})</strong>
                 </p>
                 <p className="text-2xl sm:text-3xl font-black tracking-tight mt-1">
                   {totalCups} แก้ว {totalAmount > 0 && `· ${totalAmount.toLocaleString()} ฿`}
@@ -473,9 +538,10 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
             </div>
 
             {/* Submit Button พร้อมชื่อผู้ใช้ชัดเจน */}
-            <form action={stampAction}>
-              <input type="hidden" name="userId" value={selectedCustomer.id} />
+            <form action={handleStampAction}>
+              <input type="hidden" name="userId" value={activeCustomer.id} />
               <input type="hidden" name="cups" value={totalCups} />
+              <input type="hidden" name="totalAmount" value={totalAmount} />
               <input type="hidden" name="note" value={note} />
               <input
                 type="hidden"
@@ -491,7 +557,7 @@ export default function AddStampForm({ customers, menuItems, stampsRequired }: P
                 <Coffee className="w-5 h-5 sm:w-6 sm:h-6" />
                 {stampPending
                   ? 'กำลังบันทึกรายการ...'
-                  : `บันทึกให้ ${selectedCustomer.name} (@${selectedCustomer.username}) · +${totalCups} แต้ม`}
+                  : `บันทึกให้ ${activeCustomer.name} (@${activeCustomer.username}) · +${totalCups} แต้ม`}
               </button>
             </form>
           </div>
