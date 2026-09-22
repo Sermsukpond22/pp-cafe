@@ -165,14 +165,14 @@ export default function CustomerListClient({
           onClick={() => setFilter('free')}
           className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 shrink-0 ${
             filter === 'free'
-              ? 'bg-amber-500 text-white shadow-xs'
-              : 'bg-white text-gray-700 hover:bg-amber-50 border border-gray-200'
+              ? 'bg-teal-700 text-white shadow-xs'
+              : 'bg-white text-gray-700 hover:bg-teal-50 border border-gray-200'
           }`}
         >
           🎁 มีสิทธิ์แลกฟรี
           <span
             className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-              filter === 'free' ? 'bg-amber-600 text-white' : 'bg-amber-100 text-amber-800'
+              filter === 'free' ? 'bg-teal-800 text-white' : 'bg-teal-100 text-teal-800'
             }`}
           >
             {freeCount}
@@ -291,7 +291,7 @@ export default function CustomerListClient({
                       ☕ {c.stamps}/{stampsRequired} แต้ม
                     </span>
                     {c.freeRedeems > 0 && (
-                      <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800">
+                      <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-teal-100 text-teal-800">
                         🎁 ฟรี {c.freeRedeems}
                       </span>
                     )}
@@ -316,7 +316,7 @@ export default function CustomerListClient({
                     {c.stamps}/{stampsRequired} แต้ม ({c.totalCups} แก้ว)
                   </p>
                   {c.freeRedeems > 0 && (
-                    <span className="inline-block text-[11px] bg-amber-100 text-amber-800 font-extrabold px-2 py-0.5 rounded-full mt-0.5">
+                    <span className="inline-block text-[11px] bg-teal-100 text-teal-800 font-extrabold px-2 py-0.5 rounded-full mt-0.5">
                       🎁 ฟรี {c.freeRedeems} แก้ว
                     </span>
                   )}

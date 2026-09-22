@@ -64,11 +64,11 @@ export default async function DashboardPage() {
 
         {/* Free Redeems Banner */}
         {user.freeRedeems > 0 && (
-          <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-3xl p-5 flex items-center gap-3.5 shadow-md">
+          <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-3xl p-5 flex items-center gap-3.5 shadow-md">
             <span className="text-3xl sm:text-4xl">🎉</span>
             <div>
               <p className="font-black text-base sm:text-lg">มีสิทธิ์แลกน้ำฟรี {user.freeRedeems} แก้ว!</p>
-              <p className="text-amber-100 text-xs sm:text-sm font-medium mt-0.5">
+              <p className="text-emerald-100 text-xs sm:text-sm font-medium mt-0.5">
                 แจ้งชื่อกับพนักงานที่เคาน์เตอร์เพื่อแลกรับเครื่องดื่มฟรีได้เลย
               </p>
             </div>

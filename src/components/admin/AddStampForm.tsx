@@ -292,8 +292,8 @@ export default function AddStampForm({
             </div>
           ) : isSearching && filteredCustomers.length === 0 ? (
             /* Case B: Searched but not found */
-            <div className="py-6 px-4 text-center bg-amber-50/50 rounded-2xl border border-amber-200/80">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-2">
+            <div className="py-6 px-4 text-center bg-emerald-50/40 rounded-2xl border border-emerald-100">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-2">
                 <SearchX className="w-5 h-5" />
               </div>
               <p className="text-sm font-bold text-gray-900">
@@ -446,14 +446,14 @@ export default function AddStampForm({
         <>
           {/* ปุ่มแลกน้ำฟรี ถ้ามีสิทธิ์ */}
           {activeCustomer.freeRedeems > 0 && (
-            <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/15 border border-amber-300 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
+            <div className="bg-gradient-to-r from-emerald-50 via-teal-50/60 to-emerald-50 border border-emerald-300 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <Gift className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Gift className="w-5 h-5 text-emerald-100" />
                 </div>
                 <div>
-                  <p className="font-extrabold text-amber-950 text-sm">สิทธิ์แลกน้ำฟรี 🎁</p>
-                  <p className="text-xs text-amber-800 font-medium">
+                  <p className="font-extrabold text-emerald-950 text-sm">สิทธิ์แลกน้ำฟรี 🎁</p>
+                  <p className="text-xs text-emerald-700 font-medium">
                     คงเหลือ {activeCustomer.freeRedeems} แก้ว
                   </p>
                 </div>
@@ -462,7 +462,7 @@ export default function AddStampForm({
                 type="button"
                 onClick={() => setIsRedeemModalOpen(true)}
                 disabled={redeemPending}
-                className="bg-amber-500 hover:bg-amber-600 active:scale-95 disabled:bg-amber-300 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition shadow-xs shrink-0 cursor-pointer flex items-center gap-1.5"
+                className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:bg-emerald-300 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition shadow-xs shrink-0 cursor-pointer flex items-center gap-1.5"
               >
                 {redeemPending ? (
                   <>

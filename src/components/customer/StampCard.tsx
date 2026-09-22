@@ -20,7 +20,7 @@ export default function StampCard({ stamps, stampsRequired, freeRedeems }: Stamp
           </p>
         </div>
         {freeRedeems > 0 && (
-          <div className="bg-amber-400 text-amber-950 rounded-2xl px-3.5 py-1.5 text-xs sm:text-sm font-black shadow-sm flex items-center gap-1.5 animate-pulse">
+          <div className="bg-white/95 text-emerald-900 border border-white/50 rounded-2xl px-3.5 py-1.5 text-xs sm:text-sm font-black shadow-sm flex items-center gap-1.5">
             <span>🎁</span>
             <span>ฟรี ×{freeRedeems} แก้ว</span>
           </div>

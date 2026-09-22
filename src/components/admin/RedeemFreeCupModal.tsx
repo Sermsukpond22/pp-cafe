@@ -95,10 +95,10 @@ export default function RedeemFreeCupModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 px-5 sm:px-6 py-4 sm:py-5 text-white flex items-center justify-between shrink-0 shadow-xs">
+        <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 px-5 sm:px-6 py-4 sm:py-5 text-white flex items-center justify-between shrink-0 shadow-xs">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-xs shadow-inner">
-              <Gift className="w-5 h-5 text-amber-100 fill-amber-100" />
+              <Gift className="w-5 h-5 text-emerald-100 fill-emerald-100" />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-black text-white leading-tight flex items-center gap-1.5">
@@ -107,7 +107,7 @@ export default function RedeemFreeCupModal({
                   🎁 สิทธิ์คงเหลือ {customer.freeRedeems}
                 </span>
               </h2>
-              <p className="text-xs text-amber-100 font-medium mt-0.5">
+              <p className="text-xs text-emerald-100 font-medium mt-0.5">
                 ลูกค้า: <strong className="text-white">{customer.name}</strong>
                 {customer.phone && ` (${customer.phone})`}
               </p>
@@ -135,7 +135,7 @@ export default function RedeemFreeCupModal({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="ค้นหาชื่อเมนูที่ต้องการแลก..."
-                className="w-full pl-9 pr-8 py-2 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 bg-gray-50/50"
+                className="w-full pl-9 pr-8 py-2 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50/50"
               />
               {search && (
                 <button
@@ -158,7 +158,7 @@ export default function RedeemFreeCupModal({
                     onClick={() => setSelectedCategory(cat)}
                     className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer shrink-0 ${
                       selectedCategory === cat
-                        ? 'bg-amber-500 text-white shadow-2xs'
+                        ? 'bg-emerald-600 text-white shadow-2xs'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
@@ -173,11 +173,11 @@ export default function RedeemFreeCupModal({
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Coffee className="w-3.5 h-3.5 text-amber-600" />
+                <Coffee className="w-3.5 h-3.5 text-emerald-600" />
                 <span>คลิกเลือกเมนูที่ลูกค้าแลก</span>
               </span>
               {selectedItem && (
-                <span className="text-amber-600 font-extrabold text-[11px] animate-in fade-in">
+                <span className="text-emerald-700 font-extrabold text-[11px] animate-in fade-in">
                   เลือกแล้ว: {selectedItem.name}
                 </span>
               )}
@@ -193,7 +193,7 @@ export default function RedeemFreeCupModal({
                       setSearch('')
                       setSelectedCategory('all')
                     }}
-                    className="mt-2 text-xs text-amber-600 font-bold hover:underline"
+                    className="mt-2 text-xs text-emerald-600 font-bold hover:underline"
                   >
                     ล้างการค้นหา
                   </button>
@@ -210,8 +210,8 @@ export default function RedeemFreeCupModal({
                       onClick={() => setSelectedItem(isSelected ? null : item)}
                       className={`text-left p-3 rounded-2xl border transition flex items-center justify-between gap-2 cursor-pointer ${
                         isSelected
-                          ? 'border-amber-500 bg-amber-50/70 shadow-2xs ring-2 ring-amber-400/40'
-                          : 'border-gray-200 bg-white hover:border-amber-300 hover:bg-amber-50/30'
+                          ? 'border-emerald-500 bg-emerald-50/70 shadow-2xs ring-2 ring-emerald-400/40'
+                          : 'border-gray-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/30'
                       }`}
                     >
                       <div className="min-w-0 flex-1">
@@ -225,14 +225,14 @@ export default function RedeemFreeCupModal({
                           <span className="text-[11px] text-gray-400 line-through">
                             {item.price} ฿
                           </span>
-                          <span className="text-[11px] font-black text-amber-600">ฟรี 0 ฿</span>
+                          <span className="text-[11px] font-black text-emerald-700">ฟรี 0 ฿</span>
                         </div>
                       </div>
 
                       <div
                         className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition ${
                           isSelected
-                            ? 'bg-amber-500 text-white shadow-2xs'
+                            ? 'bg-emerald-600 text-white shadow-2xs'
                             : 'border border-gray-300 text-transparent'
                         }`}
                       >
@@ -255,7 +255,7 @@ export default function RedeemFreeCupModal({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="เช่น หวาน 25%, ไม่ใส่น้ำเชื่อม, แก้วใหญ่..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
             />
           </div>
         </div>
@@ -267,7 +267,7 @@ export default function RedeemFreeCupModal({
             type="button"
             onClick={handleSelectMenuRedeem}
             disabled={!selectedItem || isPending}
-            className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-98 disabled:from-gray-300 disabled:to-gray-300 text-white font-extrabold text-xs sm:text-sm rounded-xl transition shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 active:scale-98 disabled:from-gray-300 disabled:to-gray-300 text-white font-extrabold text-xs sm:text-sm rounded-xl transition shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
           >
             {isPending ? (
               <>
@@ -276,7 +276,7 @@ export default function RedeemFreeCupModal({
               </>
             ) : selectedItem ? (
               <>
-                <Sparkles className="w-4 h-4 fill-amber-200 text-amber-200" />
+                <Sparkles className="w-4 h-4 fill-emerald-200 text-emerald-200" />
                 <span>ยืนยันแลกฟรี: {selectedItem.name} (0 ฿)</span>
               </>
             ) : (
@@ -290,7 +290,7 @@ export default function RedeemFreeCupModal({
               type="button"
               onClick={handleQuickRedeem}
               disabled={isPending}
-              className="flex-1 py-2.5 px-3 bg-white hover:bg-gray-100 active:scale-98 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="flex-1 py-2.5 px-3 bg-white hover:bg-emerald-50 active:scale-98 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               title="แลกทันทีโดยไม่ต้องระบุเมนู สำหรับช่วงเวลาคิวเร่งรีบ"
             >
               <span>⚡ แลกด่วน (ไม่ระบุเมนู)</span>

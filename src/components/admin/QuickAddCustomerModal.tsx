@@ -197,11 +197,11 @@ export default function QuickAddCustomerModal({
           </div>
 
           {/* Quick Info Box */}
-          <div className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-3 text-xs text-amber-900 flex items-start gap-2.5">
+          <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-3 text-xs text-emerald-900 flex items-start gap-2.5">
             <span className="text-base leading-none mt-0.5">💡</span>
             <div className="space-y-0.5">
-              <p className="font-bold text-amber-950">สะดวก รวดเร็ว คิวไม่สะดุด</p>
-              <p className="text-amber-800/90 leading-relaxed text-[11px] sm:text-xs">
+              <p className="font-bold text-emerald-950">สะดวก รวดเร็ว คิวไม่สะดุด</p>
+              <p className="text-emerald-800/90 leading-relaxed text-[11px] sm:text-xs">
                 ระบบจะตั้ง username และรหัสผ่านเป็น <strong>เบอร์โทรศัพท์</strong> ให้อัตโนมัติ ลูกค้าสามารถใช้เบอร์โทรล็อกอินเช็คแต้มได้ทันที
               </p>
             </div>
