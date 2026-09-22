@@ -140,11 +140,35 @@ export async function redeemFreeCup(
   const userId = formData.get('userId') as string
   if (!userId) return { message: 'ไม่พบ userId' }
 
+  const menuItemId = (formData.get('menuItemId') as string) || null
+  const menuItemName = (formData.get('menuItemName') as string) || null
+  const note = (formData.get('note') as string)?.trim() || null
+
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user) return { message: 'ไม่พบลูกค้า' }
 
   if (user.freeRedeems <= 0) {
     return { message: 'ลูกค้าไม่มีสิทธิ์แลกน้ำฟรี' }
+  }
+
+  // Lookup menu item if provided
+  let itemPrice = 0
+  let finalItemName = menuItemName
+
+  if (menuItemId) {
+    const item = await prisma.menuItem.findUnique({ where: { id: menuItemId } })
+    if (item) {
+      itemPrice = item.price
+      finalItemName = item.name
+    }
+  }
+
+  let transactionNote = 'แลกเครื่องดื่มฟรี 1 แก้ว'
+  if (finalItemName) {
+    transactionNote = `แลกฟรี: ${finalItemName}`
+    if (note) transactionNote += ` (${note})`
+  } else if (note) {
+    transactionNote = `แลกเครื่องดื่มฟรี 1 แก้ว (${note})`
   }
 
   try {
@@ -169,8 +193,23 @@ export async function redeemFreeCup(
           type: 'REDEEM',
           cups: 1,
           totalAmount: 0,
-          note: 'แลกเครื่องดื่มฟรี 1 แก้ว',
+          note: transactionNote,
           createdBy: session.userId,
+          ...(finalItemName
+            ? {
+                items: {
+                  create: [
+                    {
+                      menuItemId: menuItemId || null,
+                      name: finalItemName,
+                      price: itemPrice,
+                      quantity: 1,
+                      subtotal: 0,
+                    },
+                  ],
+                },
+              }
+            : {}),
         },
       })
     })
@@ -187,5 +226,9 @@ export async function redeemFreeCup(
   revalidatePath('/dashboard')
   revalidatePath('/history')
 
-  return { message: 'แลกน้ำฟรีสำเร็จ 1 แก้ว! ☕', success: true }
+  const successMsg = finalItemName
+    ? `แลกฟรี '${finalItemName}' สำเร็จ! 🎉`
+    : 'แลกน้ำฟรีสำเร็จ 1 แก้ว! ☕'
+
+  return { message: successMsg, success: true }
 }

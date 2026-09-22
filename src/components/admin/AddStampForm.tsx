@@ -21,6 +21,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import QuickAddCustomerModal, { CustomerSummary } from './QuickAddCustomerModal'
+import RedeemFreeCupModal from './RedeemFreeCupModal'
 
 interface Customer {
   id: string
@@ -75,6 +76,7 @@ export default function AddStampForm({
   const [quickAddKey, setQuickAddKey] = useState(0)
   const [quickAddDefaultName, setQuickAddDefaultName] = useState('')
   const [quickAddDefaultPhone, setQuickAddDefaultPhone] = useState('')
+  const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false)
 
   const handleOpenQuickAdd = (searchQuery?: string) => {
     const query = (searchQuery ?? searchCustomer).trim()
@@ -170,15 +172,22 @@ export default function AddStampForm({
     })
   }
 
-  const handleRedeemAction = (formData: FormData) => {
+  const handleConfirmRedeem = (menuItemId?: string, menuItemName?: string, note?: string) => {
+    if (!selectedCustomer) return
+    const formData = new FormData()
+    formData.append('userId', selectedCustomer.id)
+    if (menuItemId) formData.append('menuItemId', menuItemId)
+    if (menuItemName) formData.append('menuItemName', menuItemName)
+    if (note) formData.append('note', note)
+
     startRedeemTransition(async () => {
       const res = await redeemFreeCup(undefined, formData)
       if (res?.success) {
         toast.success(res.message || 'แลกน้ำฟรีสำเร็จ!')
-        if (selectedCustomer) {
-          const found = allCustomers.find((c) => c.id === selectedCustomer.id)
-          if (found) setSelectedCustomer(found)
-        }
+        setIsRedeemModalOpen(false)
+        setSelectedCustomer((prev) =>
+          prev ? { ...prev, freeRedeems: Math.max(0, prev.freeRedeems - 1) } : null
+        )
       } else if (res?.message) {
         toast.error(res.message)
       }
@@ -437,11 +446,7 @@ export default function AddStampForm({
         <>
           {/* ปุ่มแลกน้ำฟรี ถ้ามีสิทธิ์ */}
           {activeCustomer.freeRedeems > 0 && (
-            <form
-              action={handleRedeemAction}
-              className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/15 border border-amber-300 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs"
-            >
-              <input type="hidden" name="userId" value={activeCustomer.id} />
+            <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-amber-500/15 border border-amber-300 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
                   <Gift className="w-5 h-5" />
@@ -454,13 +459,24 @@ export default function AddStampForm({
                 </div>
               </div>
               <button
-                type="submit"
+                type="button"
+                onClick={() => setIsRedeemModalOpen(true)}
                 disabled={redeemPending}
-                className="bg-amber-500 hover:bg-amber-600 active:scale-95 disabled:bg-amber-300 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition shadow-xs shrink-0 cursor-pointer"
+                className="bg-amber-500 hover:bg-amber-600 active:scale-95 disabled:bg-amber-300 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition shadow-xs shrink-0 cursor-pointer flex items-center gap-1.5"
               >
-                {redeemPending ? 'กำลังแลก...' : 'แลกฟรี 1 แก้ว'}
+                {redeemPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>กำลังแลก...</span>
+                  </>
+                ) : (
+                  <>
+                    <Gift className="w-4 h-4" />
+                    <span>แลกฟรี 1 แก้ว</span>
+                  </>
+                )}
               </button>
-            </form>
+            </div>
           )}
 
           {/* Card: เลือกเมนูที่ลูกค้าสั่ง */}
@@ -750,6 +766,19 @@ export default function AddStampForm({
           defaultName={quickAddDefaultName}
           defaultPhone={quickAddDefaultPhone}
           onCustomerCreated={handleCustomerCreated}
+        />
+      )}
+
+      {/* Redeem Free Cup Modal */}
+      {activeCustomer && isRedeemModalOpen && (
+        <RedeemFreeCupModal
+          key={`${activeCustomer.id}-${activeCustomer.freeRedeems}`}
+          isOpen={isRedeemModalOpen}
+          onClose={() => setIsRedeemModalOpen(false)}
+          customer={activeCustomer}
+          menuItems={menuItems}
+          isPending={redeemPending}
+          onConfirmRedeem={handleConfirmRedeem}
         />
       )}
     </div>

@@ -159,4 +159,59 @@ export async function runStampsTier1Tests() {
     const updated = await prisma.user.findUnique({ where: { id: cust.id } })
     assertEqual(updated?.freeRedeems, 2, 'Balance must remain unchanged')
   })
+
+  // T1.2.7: Admin redeems free cup specifying menuItem and custom note
+  await runTest('T1.2.7: Admin redeems free cup specifying menuItem and custom note', async () => {
+    const admin = await createTestAdmin()
+    const cust = await createTestCustomer({ freeRedeems: 1 })
+    await setTestSession({
+      userId: admin.id,
+      role: 'ADMIN',
+      username: admin.username,
+      name: admin.name,
+    })
+
+    const menuItem = await prisma.menuItem.create({
+      data: {
+        name: 'มัทฉะลาเต้เย็น-TEST',
+        price: 65,
+        category: 'ชา',
+        isActive: true,
+      },
+    })
+
+    const fd = new FormData()
+    fd.append('userId', cust.id)
+    fd.append('menuItemId', menuItem.id)
+    fd.append('menuItemName', menuItem.name)
+    fd.append('note', 'หวานน้อย 50%')
+
+    const res = await redeemFreeCup(undefined, fd)
+    assertTrue(res.success === true, 'Redeem with menu should succeed')
+    assertEqual(res.message, "แลกฟรี 'มัทฉะลาเต้เย็น-TEST' สำเร็จ! 🎉")
+
+    const updated = await prisma.user.findUnique({ where: { id: cust.id } })
+    assertEqual(updated?.freeRedeems, 0, 'freeRedeems should decrement to 0')
+
+    const tx = await prisma.transaction.findFirst({
+      where: { userId: cust.id, type: 'REDEEM' },
+      include: { items: true },
+    })
+    assertTrue(tx !== null, 'REDEEM transaction should exist')
+    assertEqual(tx?.cups, 1)
+    assertEqual(tx?.totalAmount, 0)
+    assertEqual(tx?.note, 'แลกฟรี: มัทฉะลาเต้เย็น-TEST (หวานน้อย 50%)')
+    assertEqual(tx?.items.length, 1)
+    assertEqual(tx?.items[0].name, 'มัทฉะลาเต้เย็น-TEST')
+    assertEqual(tx?.items[0].price, 65)
+    assertEqual(tx?.items[0].quantity, 1)
+    assertEqual(tx?.items[0].subtotal, 0)
+
+    // Cleanup created menu item and transactions
+    if (tx?.id) {
+      await prisma.transactionItem.deleteMany({ where: { transactionId: tx.id } })
+      await prisma.transaction.deleteMany({ where: { id: tx.id } })
+    }
+    await prisma.menuItem.delete({ where: { id: menuItem.id } })
+  })
 }
