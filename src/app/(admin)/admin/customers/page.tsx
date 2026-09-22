@@ -26,7 +26,7 @@ export default async function AdminCustomersPage() {
   })
 
   return (
-    <div className="p-4 sm:p-6 pb-28 sm:pb-8 max-w-4xl mx-auto space-y-5">
+    <div className="p-4 sm:p-6 pb-28 sm:pb-8 max-w-4xl mx-auto space-y-5 w-full min-w-0">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-gray-900">👥 รายชื่อลูกค้าทั้งหมด</h1>

@@ -142,10 +142,10 @@ export default function CustomerListClient({
       </div>
 
       {/* Filter Pills */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none w-full max-w-full min-w-0">
         <button
           onClick={() => setFilter('all')}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
+          className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 shrink-0 ${
             filter === 'all'
               ? 'bg-emerald-600 text-white shadow-xs'
               : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
@@ -163,7 +163,7 @@ export default function CustomerListClient({
 
         <button
           onClick={() => setFilter('free')}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
+          className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 shrink-0 ${
             filter === 'free'
               ? 'bg-amber-500 text-white shadow-xs'
               : 'bg-white text-gray-700 hover:bg-amber-50 border border-gray-200'
@@ -181,7 +181,7 @@ export default function CustomerListClient({
 
         <button
           onClick={() => setFilter('near')}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
+          className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 shrink-0 ${
             filter === 'near'
               ? 'bg-emerald-600 text-white shadow-xs'
               : 'bg-white text-gray-700 hover:bg-emerald-50 border border-gray-200'
@@ -199,7 +199,7 @@ export default function CustomerListClient({
 
         <button
           onClick={() => setFilter('regular')}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
+          className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 shrink-0 ${
             filter === 'regular'
               ? 'bg-blue-600 text-white shadow-xs'
               : 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-200'
@@ -260,26 +260,48 @@ export default function CustomerListClient({
           filtered.map((c) => (
             <div
               key={c.id}
-              className="flex items-center justify-between p-4 sm:p-5 hover:bg-emerald-50/40 transition active:bg-gray-50"
+              className="flex items-center justify-between p-3.5 sm:p-5 hover:bg-emerald-50/40 transition active:bg-gray-50 gap-2.5 sm:gap-4"
             >
               <Link
                 href={`/admin/customers/${c.id}`}
-                className="flex items-center gap-3.5 flex-1 min-w-0"
+                className="flex items-center gap-3 sm:gap-3.5 flex-1 min-w-0"
               >
-                <div className="w-12 h-12 bg-emerald-100 text-emerald-800 rounded-2xl flex items-center justify-center font-black text-lg flex-shrink-0">
+                <div className="w-11 h-11 sm:w-12 sm:h-12 bg-emerald-100 text-emerald-800 rounded-2xl flex items-center justify-center font-black text-base sm:text-lg shrink-0">
                   {c.name.charAt(0).toUpperCase()}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-gray-900 text-sm sm:text-base truncate">{c.name}</p>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                    @{c.username} {c.phone && `· 📞 ${c.phone}`}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="font-bold text-gray-900 text-sm sm:text-base truncate">
+                      {c.name}
+                    </p>
+                    <span className="text-xs text-gray-400 font-normal">
+                      @{c.username}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    {c.phone && <span>📞 {c.phone}</span>}
+                    <span>· สะสม {c.totalCups} แก้ว</span>
                   </p>
+
+                  {/* Badges for Mobile (< sm) */}
+                  <div className="flex items-center gap-1.5 mt-1.5 sm:hidden">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      ☕ {c.stamps}/{stampsRequired} แต้ม
+                    </span>
+                    {c.freeRedeems > 0 && (
+                      <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800">
+                        🎁 ฟรี {c.freeRedeems}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </Link>
 
-              <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
-                <Link href={`/admin/customers/${c.id}`} className="text-right flex-shrink-0">
+              <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                {/* Desktop Stamp Display (hidden on mobile, shown on sm:) */}
+                <Link href={`/admin/customers/${c.id}`} className="hidden sm:block text-right shrink-0">
                   <div className="flex gap-1 justify-end">
                     {Array.from({ length: stampsRequired }).map((_, i) => (
                       <span
@@ -291,7 +313,7 @@ export default function CustomerListClient({
                     ))}
                   </div>
                   <p className="text-xs sm:text-sm font-bold text-gray-700 mt-1">
-                    {c.totalCups} แก้วสะสม
+                    {c.stamps}/{stampsRequired} แต้ม ({c.totalCups} แก้ว)
                   </p>
                   {c.freeRedeems > 0 && (
                     <span className="inline-block text-[11px] bg-amber-100 text-amber-800 font-extrabold px-2 py-0.5 rounded-full mt-0.5">
@@ -307,10 +329,10 @@ export default function CustomerListClient({
                     e.stopPropagation()
                     setEditTarget(c)
                   }}
-                  className="p-2 sm:p-2.5 text-gray-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition ml-1"
+                  className="p-2 sm:p-2.5 text-gray-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition cursor-pointer"
                   title="แก้ไขข้อมูลลูกค้า"
                 >
-                  <Pencil className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Pencil className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                 </button>
 
                 {isSuperAdmin && (
@@ -321,10 +343,10 @@ export default function CustomerListClient({
                       e.stopPropagation()
                       setDeleteTarget(c)
                     }}
-                    className="p-2 sm:p-2.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition ml-1"
+                    className="p-2 sm:p-2.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer"
                     title="ลบลูกค้า (Super Admin)"
                   >
-                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Trash2 className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                   </button>
                 )}
               </div>

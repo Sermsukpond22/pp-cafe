@@ -12,7 +12,8 @@
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "db:local:setup": "powershell -ExecutionPolicy Bypass -File ./setup-local-db.ps1",
-    "db:prod:switch": "powershell -ExecutionPolicy Bypass -File ./switch-to-prod.ps1"
+    "db:prod:switch": "powershell -ExecutionPolicy Bypass -File ./switch-to-prod.ps1",
+    "db:seed:mock": "node --experimental-strip-types prisma/seed-mock-customers.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
