@@ -20,6 +20,7 @@ export default function LoginPage() {
               width={80}
               height={80}
               className="w-full h-full object-cover"
+              unoptimized
               priority
             />
           </div>

@@ -31,7 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="px-6 py-6 border-b border-emerald-700/60">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-600/50 flex-shrink-0 shadow-sm bg-white">
-              <Image src="/logo.jpg" alt="Logo" width={40} height={40} className="w-full h-full object-cover" />
+              <Image src="/logo.jpg" alt="Logo" width={40} height={40} className="w-full h-full object-cover" unoptimized />
             </div>
             <div>
               <p className="text-white font-black text-lg tracking-tight">ติดชาคอฟฟี่</p>

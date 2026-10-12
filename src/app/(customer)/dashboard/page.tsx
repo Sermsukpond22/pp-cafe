@@ -53,7 +53,7 @@ export default async function DashboardPage() {
           <h1 className="text-lg sm:text-xl font-black tracking-tight">{user.name}</h1>
         </div>
         <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-500/40 shadow-xs bg-white flex-shrink-0">
-          <Image src="/logo.jpg" alt="Logo" width={40} height={40} className="w-full h-full object-cover" />
+          <Image src="/logo.jpg" alt="Logo" width={40} height={40} className="w-full h-full object-cover" unoptimized />
         </div>
       </header>
 
