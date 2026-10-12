@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Search, X, Pencil, History, Filter, ArrowUpDown } from 'lucide-react'
+import { Search, X, Pencil, History } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import EditOrderModal, { TransactionData, MenuItemOption } from './EditOrderModal'
 import OrderAuditModal, { EditLogItem } from './OrderAuditModal'

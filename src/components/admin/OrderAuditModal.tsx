@@ -1,7 +1,21 @@
 'use client'
 
-import { X, History, UserCheck, Calendar, FileText, ArrowRight } from 'lucide-react'
+import { X, History, UserCheck, Calendar, FileText } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+
+export interface PreviousItemSnapshot {
+  name: string
+  quantity: number
+  price: number
+  subtotal?: number
+}
+
+export interface PreviousDataSnapshot {
+  cups?: number
+  totalAmount?: number
+  note?: string | null
+  items?: PreviousItemSnapshot[]
+}
 
 export interface EditLogItem {
   id: string
@@ -18,7 +32,7 @@ export interface EditLogItem {
 }
 
 interface OrderAuditModalProps {
-  transactionId: string
+  transactionId?: string
   userName: string
   userUsername: string
   type: 'EARN' | 'REDEEM'
@@ -27,7 +41,6 @@ interface OrderAuditModalProps {
 }
 
 export default function OrderAuditModal({
-  transactionId,
   userName,
   userUsername,
   type,
@@ -77,10 +90,10 @@ export default function OrderAuditModal({
               </div>
 
               {editLogs.map((log, idx) => {
-                let parsedPrev: any = null
+                let parsedPrev: PreviousDataSnapshot | null = null
                 if (log.previousData) {
                   try {
-                    parsedPrev = JSON.parse(log.previousData)
+                    parsedPrev = JSON.parse(log.previousData) as PreviousDataSnapshot
                   } catch {
                     parsedPrev = null
                   }
@@ -157,7 +170,7 @@ export default function OrderAuditModal({
                             <div>
                               <strong>รายการเดิม:</strong>
                               <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
-                                {parsedPrev.items.map((item: any, i: number) => (
+                                {parsedPrev.items.map((item: PreviousItemSnapshot, i: number) => (
                                   <li key={i}>
                                     {item.name} ×{item.quantity} ({item.price}฿)
                                   </li>

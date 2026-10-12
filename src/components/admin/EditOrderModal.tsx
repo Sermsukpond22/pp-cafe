@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Plus, Minus, Trash2, Save, Coffee, AlertCircle } from 'lucide-react'
+import { X, Plus, Minus, Trash2, Save, AlertCircle } from 'lucide-react'
 import { editTransaction } from '@/app/actions/admin'
 import toast from 'react-hot-toast'
 
