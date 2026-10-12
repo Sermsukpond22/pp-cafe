@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { login } from '@/app/actions/auth'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState(login, undefined)
@@ -12,8 +13,15 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo / Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-emerald-600 rounded-2xl mb-4 shadow-lg">
-            <span className="text-4xl">🧋</span>
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 shadow-lg overflow-hidden border-2 border-emerald-500/20 bg-white">
+            <Image
+              src="/logo.jpg"
+              alt="ติดชาคอฟฟี่ Logo"
+              width={80}
+              height={80}
+              className="w-full h-full object-cover"
+              priority
+            />
           </div>
           <h1 className="text-3xl font-bold text-emerald-800">ติดชาคอฟฟี่</h1>
           <p className="text-emerald-600 mt-1">ระบบสะสมแต้ม</p>

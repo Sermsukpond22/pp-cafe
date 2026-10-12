@@ -1,6 +1,7 @@
 import { getSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { logout } from '@/app/actions/auth'
 import AdminMobileNav from '@/components/admin/AdminMobileNav'
 
@@ -29,7 +30,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <aside className="hidden md:flex w-64 bg-emerald-800 flex-col min-h-screen fixed top-0 left-0 shadow-lg z-20">
         <div className="px-6 py-6 border-b border-emerald-700/60">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">🧋</span>
+            <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-600/50 flex-shrink-0 shadow-sm bg-white">
+              <Image src="/logo.jpg" alt="Logo" width={40} height={40} className="w-full h-full object-cover" />
+            </div>
             <div>
               <p className="text-white font-black text-lg tracking-tight">ติดชาคอฟฟี่</p>
               <p className="text-emerald-200 text-xs font-semibold">ระบบจัดการหลังร้าน</p>

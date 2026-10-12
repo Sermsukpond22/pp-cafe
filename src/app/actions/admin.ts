@@ -303,4 +303,185 @@ export async function quickAddCustomer(
   }
 }
 
+// ─── Edit Transaction / Order (ADMIN & SUPER_ADMIN) ───────────────────────────
+const STAMPS_REQUIRED = Number(process.env.STAMPS_REQUIRED ?? 10)
+
+export async function editTransaction(
+  state: ActionState | undefined,
+  formData: FormData
+): Promise<ActionState> {
+  const session = await getSession()
+  if (!session || (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) {
+    return { message: 'ไม่มีสิทธิ์ดำเนินการ', success: false }
+  }
+
+  const transactionId = formData.get('transactionId') as string
+  if (!transactionId) {
+    return { message: 'ไม่พบรหัสธุรกรรม', success: false }
+  }
+
+  const note = (formData.get('note') as string)?.trim() || null
+  const reason = (formData.get('reason') as string)?.trim() || 'แก้ไขรายละเอียดออเดอร์'
+  const itemsJson = formData.get('itemsJson') as string
+
+  const tx = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    include: {
+      user: true,
+      items: true,
+    },
+  })
+
+  if (!tx) {
+    return { message: 'ไม่พบข้อมูลออเดอร์', success: false }
+  }
+
+  let items: Array<{ menuItemId?: string; name: string; price: number; quantity: number }> = []
+  if (itemsJson) {
+    try {
+      items = JSON.parse(itemsJson)
+    } catch {
+      items = []
+    }
+  }
+
+  let newCups = tx.cups
+  let newTotalAmount = tx.totalAmount
+
+  if (tx.type === 'EARN') {
+    if (items.length > 0) {
+      newCups = items.reduce((sum, item) => sum + item.quantity, 0)
+      newTotalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    } else {
+      const rawCups = formData.get('cups')
+      const rawAmount = formData.get('totalAmount')
+      if (rawCups !== null) newCups = Number(rawCups)
+      if (rawAmount !== null) newTotalAmount = Number(rawAmount)
+    }
+
+    if (newCups <= 0) {
+      return { message: 'จำนวนแก้วต้องมากกว่า 0', success: false }
+    }
+  } else {
+    // REDEEM
+    newCups = 1
+    newTotalAmount = 0
+    if (items.length > 0) {
+      items = [items[0]]
+    }
+  }
+
+  // Calculate changes summary
+  const changes: string[] = []
+  if (tx.cups !== newCups) {
+    changes.push(`จำนวนแก้ว: ${tx.cups} -> ${newCups} แก้ว`)
+  }
+  if (tx.totalAmount !== newTotalAmount) {
+    changes.push(`ยอดเงิน: ${tx.totalAmount.toLocaleString()}฿ -> ${newTotalAmount.toLocaleString()}฿`)
+  }
+  if ((tx.note || '') !== (note || '')) {
+    changes.push(`หมายเหตุ: "${tx.note || '-'}" -> "${note || '-'}"`)
+  }
+  if (items.length > 0) {
+    const oldItemsDesc = tx.items.map((i) => `${i.name} ×${i.quantity}`).join(', ') || '-'
+    const newItemsDesc = items.map((i) => `${i.name} ×${i.quantity}`).join(', ') || '-'
+    if (oldItemsDesc !== newItemsDesc) {
+      changes.push(`รายการ: [${oldItemsDesc}] -> [${newItemsDesc}]`)
+    }
+  }
+
+  const changesSummary = changes.length > 0 ? changes.join(' | ') : 'แก้ไขรายละเอียดทั่วไป'
+  const cupDiff = newCups - tx.cups
+
+  await prisma.$transaction(async (prismaTx) => {
+    // 1. Log previous data in TransactionEditLog
+    await prismaTx.transactionEditLog.create({
+      data: {
+        transactionId: tx.id,
+        editedBy: session.userId,
+        editorName: session.name,
+        reason,
+        changesSummary,
+        previousData: JSON.stringify({
+          cups: tx.cups,
+          totalAmount: tx.totalAmount,
+          note: tx.note,
+          items: tx.items.map((i) => ({
+            menuItemId: i.menuItemId,
+            name: i.name,
+            price: i.price,
+            quantity: i.quantity,
+            subtotal: i.subtotal,
+          })),
+        }),
+      },
+    })
+
+    // 2. Update transaction
+    await prismaTx.transaction.update({
+      where: { id: tx.id },
+      data: {
+        cups: newCups,
+        totalAmount: newTotalAmount,
+        note,
+        updatedBy: session.userId,
+        updatedAt: new Date(),
+      },
+    })
+
+    // 3. Update items if provided
+    if (items.length > 0) {
+      await prismaTx.transactionItem.deleteMany({
+        where: { transactionId: tx.id },
+      })
+      await prismaTx.transactionItem.createMany({
+        data: items.map((item) => ({
+          transactionId: tx.id,
+          menuItemId: item.menuItemId || null,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          subtotal: item.price * item.quantity,
+        })),
+      })
+    }
+
+    // 4. Update customer stamps & totalCups if cups changed and type === 'EARN'
+    if (tx.type === 'EARN' && cupDiff !== 0) {
+      const user = tx.user
+      const newTotalCups = Math.max(0, user.totalCups + cupDiff)
+      let newStamps = user.stamps + cupDiff
+      let extraFreeRedeems = 0
+
+      if (newStamps >= STAMPS_REQUIRED) {
+        extraFreeRedeems = Math.floor(newStamps / STAMPS_REQUIRED)
+        newStamps = newStamps % STAMPS_REQUIRED
+      } else if (newStamps < 0) {
+        newStamps = Math.max(0, newStamps)
+      }
+
+      await prismaTx.user.update({
+        where: { id: user.id },
+        data: {
+          stamps: newStamps,
+          totalCups: newTotalCups,
+          ...(extraFreeRedeems > 0 ? { freeRedeems: { increment: extraFreeRedeems } } : {}),
+        },
+      })
+    }
+  })
+
+  revalidatePath('/admin/transactions')
+  revalidatePath(`/admin/customers/${tx.userId}`)
+  revalidatePath('/admin/dashboard')
+  revalidatePath('/admin/leaderboard')
+  revalidatePath('/dashboard')
+  revalidatePath('/history')
+
+  return {
+    success: true,
+    message: `แก้ไขออเดอร์เรียบร้อยแล้ว (${changesSummary})`,
+  }
+}
+
 

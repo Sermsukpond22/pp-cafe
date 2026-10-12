@@ -77,9 +77,12 @@ export default function StoreQRCode() {
 
       {/* Printable Poster Card */}
       <div id="qr-poster" className="bg-white border-2 border-emerald-500 rounded-3xl p-8 max-w-sm mx-auto shadow-md text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-2xl mb-3">
-          <span className="text-3xl">🧋</span>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo.jpg"
+          alt="ติดชาคอฟฟี่ Logo"
+          className="w-16 h-16 rounded-2xl object-cover mb-3 mx-auto shadow-sm border border-emerald-100"
+        />
         <h2 className="text-2xl font-bold text-emerald-800">ติดชาคอฟฟี่</h2>
         <p className="text-sm font-medium text-emerald-600 mb-6">สแกนเพื่อสมัครสมาชิก & สะสมแต้ม</p>
 

@@ -8,6 +8,10 @@ const geist = Geist({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'ติดชาคอฟฟี่ — สะสมแต้ม',
   description: 'ระบบสะสมแต้มร้านติดชาคอฟฟี่ ซื้อครบ 10 แก้ว รับฟรี 1 แก้ว',
+  icons: {
+    icon: '/logo.jpg',
+    apple: '/logo.jpg',
+  },
 }
 
 export const viewport: Viewport = {

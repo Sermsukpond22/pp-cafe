@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import StampCard from '@/components/customer/StampCard'
 import { logout } from '@/app/actions/auth'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const STAMPS_REQUIRED = Number(process.env.STAMPS_REQUIRED ?? 10)
 
@@ -51,7 +52,9 @@ export default async function DashboardPage() {
           <p className="text-emerald-200 text-xs sm:text-sm font-medium">ยินดีต้อนรับคุณ</p>
           <h1 className="text-lg sm:text-xl font-black tracking-tight">{user.name}</h1>
         </div>
-        <span className="text-3xl">🧋</span>
+        <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-500/40 shadow-xs bg-white flex-shrink-0">
+          <Image src="/logo.jpg" alt="Logo" width={40} height={40} className="w-full h-full object-cover" />
+        </div>
       </header>
 
       <main className="max-w-md mx-auto px-4 py-5 space-y-4 pb-12">

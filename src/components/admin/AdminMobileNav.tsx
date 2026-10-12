@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, X, LogOut, ChevronRight } from 'lucide-react'
 import { logout } from '@/app/actions/auth'
@@ -38,7 +39,9 @@ export default function AdminMobileNav({ userName, userRole }: Props) {
       {/* Mobile Top Header */}
       <header className="md:hidden fixed top-0 left-0 right-0 bg-emerald-700 text-white px-4 py-3 flex items-center justify-between z-30 shadow-md">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">🧋</span>
+          <div className="w-8 h-8 rounded-lg overflow-hidden border border-emerald-500/40 flex-shrink-0 shadow-xs bg-white">
+            <Image src="/logo.jpg" alt="Logo" width={32} height={32} className="w-full h-full object-cover" />
+          </div>
           <span className="font-black text-base tracking-tight">ติดชาคอฟฟี่</span>
         </div>
 

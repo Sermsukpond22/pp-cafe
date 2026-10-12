@@ -5,6 +5,7 @@ import Link from 'next/link'
 import StampCard from '@/components/customer/StampCard'
 import DeleteCustomerButton from '@/components/admin/DeleteCustomerButton'
 import EditCustomerButton from '@/components/admin/EditCustomerButton'
+import CustomerTransactionsClient, { CustomerTransactionItem } from '@/components/admin/CustomerTransactionsClient'
 import { formatDate } from '@/lib/utils'
 
 const STAMPS_REQUIRED = Number(process.env.STAMPS_REQUIRED ?? 10)
@@ -18,19 +19,42 @@ export default async function CustomerDetailPage({
   const session = await getSession()
   if (!session || (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) redirect('/login')
 
-  const customer = await prisma.user.findUnique({
-    where: { id, role: 'CUSTOMER' },
-    select: {
-      id: true,
-      name: true,
-      username: true,
-      phone: true,
-      stamps: true,
-      totalCups: true,
-      freeRedeems: true,
-      createdAt: true,
-    },
-  })
+  const [customer, menuItems, rawTransactions] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id, role: 'CUSTOMER' },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        phone: true,
+        stamps: true,
+        totalCups: true,
+        freeRedeems: true,
+        createdAt: true,
+      },
+    }),
+    prisma.menuItem.findMany({
+      where: { isActive: true },
+      orderBy: [{ category: 'asc' }, { name: 'asc' }],
+      select: { id: true, name: true, price: true, category: true },
+    }),
+    prisma.transaction.findMany({
+      where: { userId: id },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      include: {
+        admin: { select: { name: true } },
+        updatedByAdmin: { select: { name: true, username: true } },
+        editLogs: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            editor: { select: { name: true, username: true } },
+          },
+        },
+        items: { select: { id: true, menuItemId: true, name: true, quantity: true, price: true, subtotal: true } },
+      },
+    }),
+  ])
 
   if (!customer) notFound()
 
@@ -38,15 +62,43 @@ export default async function CustomerDetailPage({
     where: { role: 'CUSTOMER', totalCups: { gt: customer.totalCups } },
   })
 
-  const transactions = await prisma.transaction.findMany({
-    where: { userId: id },
-    orderBy: { createdAt: 'desc' },
-    take: 20,
-    include: {
-      admin: { select: { name: true } },
-      items: { select: { name: true, quantity: true } },
-    },
-  })
+  const transactions: CustomerTransactionItem[] = rawTransactions.map((tx) => ({
+    id: tx.id,
+    userId: customer.id,
+    userName: customer.name,
+    userUsername: customer.username,
+    type: tx.type,
+    cups: tx.cups,
+    totalAmount: tx.totalAmount,
+    note: tx.note,
+    createdAt: tx.createdAt.toISOString(),
+    cashierName: tx.admin.name,
+    updatedAt: tx.updatedAt ? tx.updatedAt.toISOString() : null,
+    editorName: tx.updatedByAdmin?.name || (tx.editLogs[0]?.editorName ?? null),
+    items: tx.items.map((i) => ({
+      id: i.id,
+      menuItemId: i.menuItemId,
+      name: i.name,
+      price: i.price,
+      quantity: i.quantity,
+      subtotal: i.subtotal,
+    })),
+    editLogs: tx.editLogs.map((log) => ({
+      id: log.id,
+      editedBy: log.editedBy,
+      editorName: log.editorName,
+      reason: log.reason,
+      changesSummary: log.changesSummary,
+      previousData: log.previousData,
+      createdAt: log.createdAt.toISOString(),
+      editor: log.editor
+        ? {
+            name: log.editor.name,
+            username: log.editor.username,
+          }
+        : null,
+    })),
+  }))
 
   return (
     <div className="p-4 md:p-6 pb-24 max-w-lg mx-auto">
@@ -112,46 +164,11 @@ export default async function CustomerDetailPage({
       {/* Transactions */}
       <div className="bg-white rounded-2xl shadow-sm p-4 border border-gray-100">
         <h2 className="font-semibold text-gray-800 mb-3 text-sm">ประวัติธุรกรรม</h2>
-        {transactions.length === 0 ? (
-          <p className="text-gray-400 text-sm text-center py-4">ยังไม่มีธุรกรรม</p>
-        ) : (
-          <div className="space-y-2.5">
-            {transactions.map((tx) => (
-              <div key={tx.id} className="flex items-start gap-3 py-2 border-b border-gray-50 last:border-0 text-xs">
-                <span className="text-lg mt-0.5">{tx.type === 'EARN' ? '☕' : '🎁'}</span>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="font-semibold text-gray-800">
-                      {tx.type === 'EARN' ? `ซื้อ ${tx.cups} แก้ว` : 'แลกเครื่องดื่มฟรี'}
-                    </p>
-                    <span className={`font-bold ${tx.type === 'EARN' ? 'text-emerald-600' : 'text-amber-500'}`}>
-                      {tx.type === 'EARN' ? `+${tx.cups} แต้ม` : '🆓'}
-                    </span>
-                  </div>
-
-                  {tx.items.length > 0 && (
-                    <div className="flex flex-wrap gap-1 my-1">
-                      {tx.items.map((item, idx) => (
-                        <span
-                          key={idx}
-                          className="bg-emerald-50 text-emerald-800 text-[11px] font-medium px-2 py-0.5 rounded-md"
-                        >
-                          {item.name} ×{item.quantity}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {tx.note && <p className="text-gray-500 italic mb-0.5">{tx.note}</p>}
-                  <p className="text-[11px] text-gray-400">
-                    {formatDate(tx.createdAt)} · พนักงาน: {tx.admin.name}
-                    {tx.totalAmount > 0 && ` · ${tx.totalAmount.toLocaleString()} ฿`}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <CustomerTransactionsClient
+          transactions={transactions}
+          menuItems={menuItems}
+          isSuperAdmin={session.role === 'SUPER_ADMIN'}
+        />
       </div>
     </div>
   )
