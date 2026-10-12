@@ -6,8 +6,8 @@ import { Toaster } from 'react-hot-toast'
 const geist = Geist({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'PP Cafe — สะสมแต้ม',
-  description: 'ระบบสะสมแต้มร้าน PP Cafe ซื้อครบ 10 แก้ว รับฟรี 1 แก้ว',
+  title: 'ติดชาคอฟฟี่ — สะสมแต้ม',
+  description: 'ระบบสะสมแต้มร้านติดชาคอฟฟี่ ซื้อครบ 10 แก้ว รับฟรี 1 แก้ว',
 }
 
 export const viewport: Viewport = {

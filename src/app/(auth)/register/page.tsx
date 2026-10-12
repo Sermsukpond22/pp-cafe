@@ -15,7 +15,7 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-emerald-600 rounded-2xl mb-4 shadow-lg">
             <span className="text-4xl">🧋</span>
           </div>
-          <h1 className="text-3xl font-bold text-emerald-800">PP Cafe</h1>
+          <h1 className="text-3xl font-bold text-emerald-800">ติดชาคอฟฟี่</h1>
           <p className="text-emerald-600 mt-1">สมัครสมาชิกสะสมแต้ม</p>
         </div>
 

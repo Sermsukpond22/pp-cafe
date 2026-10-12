@@ -31,7 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <div className="flex items-center gap-3">
             <span className="text-3xl">🧋</span>
             <div>
-              <p className="text-white font-black text-lg tracking-tight">PP Cafe</p>
+              <p className="text-white font-black text-lg tracking-tight">ติดชาคอฟฟี่</p>
               <p className="text-emerald-200 text-xs font-semibold">ระบบจัดการหลังร้าน</p>
             </div>
           </div>

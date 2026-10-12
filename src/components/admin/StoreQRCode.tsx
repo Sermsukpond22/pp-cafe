@@ -80,7 +80,7 @@ export default function StoreQRCode() {
         <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-2xl mb-3">
           <span className="text-3xl">🧋</span>
         </div>
-        <h2 className="text-2xl font-bold text-emerald-800">PP Cafe</h2>
+        <h2 className="text-2xl font-bold text-emerald-800">ติดชาคอฟฟี่</h2>
         <p className="text-sm font-medium text-emerald-600 mb-6">สแกนเพื่อสมัครสมาชิก & สะสมแต้ม</p>
 
         {qrDataUrl ? (
@@ -105,7 +105,7 @@ export default function StoreQRCode() {
         {qrDataUrl && (
           <a
             href={qrDataUrl}
-            download="pp-cafe-qr.png"
+            download="tidcha-coffee-qr.png"
             className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-3 rounded-xl shadow transition"
           >
             <Download className="w-4 h-4" />

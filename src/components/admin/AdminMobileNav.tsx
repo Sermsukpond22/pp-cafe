@@ -39,7 +39,7 @@ export default function AdminMobileNav({ userName, userRole }: Props) {
       <header className="md:hidden fixed top-0 left-0 right-0 bg-emerald-700 text-white px-4 py-3 flex items-center justify-between z-30 shadow-md">
         <div className="flex items-center gap-2">
           <span className="text-2xl">🧋</span>
-          <span className="font-black text-base tracking-tight">PP Cafe</span>
+          <span className="font-black text-base tracking-tight">ติดชาคอฟฟี่</span>
         </div>
 
         {/* ปุ่มเปิดเมนูอื่นๆ ด้านบน */}
