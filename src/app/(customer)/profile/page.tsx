@@ -1,9 +1,9 @@
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { logout } from '@/app/actions/auth'
 import { formatDate } from '@/lib/utils'
+import { LogOut } from 'lucide-react'
 
 export default async function ProfilePage() {
   const session = await getSession()
@@ -12,70 +12,72 @@ export default async function ProfilePage() {
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
     select: {
-      id: true, name: true, username: true, phone: true,
-      stamps: true, totalCups: true, freeRedeems: true, createdAt: true,
+      id: true,
+      name: true,
+      username: true,
+      phone: true,
+      stamps: true,
+      totalCups: true,
+      freeRedeems: true,
+      createdAt: true,
     },
   })
 
   if (!user) redirect('/login')
 
   return (
-    <div className="min-h-screen bg-emerald-50">
-      <header className="bg-emerald-600 text-white px-4 py-4 flex items-center gap-3">
-        <Link href="/dashboard" className="text-emerald-200 hover:text-white">←</Link>
-        <h1 className="text-lg font-bold">โปรไฟล์</h1>
-      </header>
-
-      <main className="max-w-md mx-auto px-4 py-6 space-y-4">
-        {/* Avatar */}
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-emerald-600 rounded-full text-white text-3xl font-bold mb-3 shadow">
-            {user.name.charAt(0)}
-          </div>
-          <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
-          <p className="text-gray-500">@{user.username}</p>
+    <div className="space-y-4">
+      {/* Profile Header Card */}
+      <div className="bg-white rounded-2xl p-5 shadow-xs border border-gray-100 flex items-center gap-4">
+        <div className="w-14 h-14 bg-emerald-700 rounded-2xl text-white text-xl font-black flex items-center justify-center shrink-0">
+          {user.name.charAt(0).toUpperCase()}
         </div>
-
-        {/* Info */}
-        <div className="bg-white rounded-2xl shadow-sm divide-y divide-gray-50">
-          {[
-            { label: 'ชื่อผู้ใช้', value: user.username },
-            { label: 'ชื่อ-นามสกุล', value: user.name },
-            { label: 'เบอร์โทร', value: user.phone || '—' },
-            { label: 'สมาชิกตั้งแต่', value: formatDate(user.createdAt) },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between px-4 py-3">
-              <p className="text-sm text-gray-500">{item.label}</p>
-              <p className="text-sm font-medium text-gray-800">{item.value}</p>
-            </div>
-          ))}
+        <div className="min-w-0">
+          <h1 className="text-base font-bold text-gray-900 truncate">{user.name}</h1>
+          <p className="text-xs text-gray-400">@{user.username}</p>
+          <p className="text-xs text-gray-500 mt-1">สมาชิกตั้งแต่ {formatDate(user.createdAt)}</p>
         </div>
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-2xl p-4 text-center shadow-sm">
-            <p className="text-2xl font-bold text-emerald-600">{user.stamps}</p>
-            <p className="text-xs text-gray-500">แต้มปัจจุบัน</p>
-          </div>
-          <div className="bg-white rounded-2xl p-4 text-center shadow-sm">
-            <p className="text-2xl font-bold text-blue-500">{user.totalCups}</p>
-            <p className="text-xs text-gray-500">แก้วทั้งหมด</p>
-          </div>
-          <div className="bg-white rounded-2xl p-4 text-center shadow-sm">
-            <p className="text-2xl font-bold text-amber-500">{user.freeRedeems}</p>
-            <p className="text-xs text-gray-500">แลกฟรี</p>
-          </div>
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2.5">
+        <div className="bg-white rounded-2xl p-3.5 text-center shadow-xs border border-gray-100">
+          <p className="text-xl font-black text-emerald-700">{user.stamps}</p>
+          <p className="text-xs text-gray-500 mt-0.5">แต้มปัจจุบัน</p>
         </div>
+        <div className="bg-white rounded-2xl p-3.5 text-center shadow-xs border border-gray-100">
+          <p className="text-xl font-black text-gray-900">{user.totalCups}</p>
+          <p className="text-xs text-gray-500 mt-0.5">แก้วสะสม</p>
+        </div>
+        <div className="bg-white rounded-2xl p-3.5 text-center shadow-xs border border-gray-100">
+          <p className="text-xl font-black text-amber-600">{user.freeRedeems}</p>
+          <p className="text-xs text-gray-500 mt-0.5">สิทธิ์แลกฟรี</p>
+        </div>
+      </div>
 
-        <form action={logout}>
-          <button
-            type="submit"
-            className="w-full bg-red-50 text-red-500 font-semibold py-3 rounded-2xl hover:bg-red-100 transition"
-          >
-            ออกจากระบบ
-          </button>
-        </form>
-      </main>
+      {/* Account Details */}
+      <div className="bg-white rounded-2xl shadow-xs border border-gray-100 divide-y divide-gray-100">
+        {[
+          { label: 'ชื่อผู้ใช้ (Username)', value: `@${user.username}` },
+          { label: 'ชื่อ-นามสกุล', value: user.name },
+          { label: 'เบอร์โทรศัพท์', value: user.phone || 'ไม่ได้ระบุ' },
+        ].map((item) => (
+          <div key={item.label} className="flex items-center justify-between px-4 py-3 text-xs sm:text-sm">
+            <p className="text-gray-500">{item.label}</p>
+            <p className="font-semibold text-gray-900">{item.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <form action={logout}>
+        <button
+          type="submit"
+          className="w-full bg-white hover:bg-red-50 text-red-600 border border-red-200/80 font-bold text-xs sm:text-sm py-3 rounded-2xl transition flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>ออกจากระบบ</span>
+        </button>
+      </form>
     </div>
   )
 }

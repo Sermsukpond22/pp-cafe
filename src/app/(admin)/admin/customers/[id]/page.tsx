@@ -2,6 +2,7 @@ import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import { ArrowLeft, Plus, Phone, Calendar } from 'lucide-react'
 import StampCard from '@/components/customer/StampCard'
 import DeleteCustomerButton from '@/components/admin/DeleteCustomerButton'
 import EditCustomerButton from '@/components/admin/EditCustomerButton'
@@ -41,7 +42,7 @@ export default async function CustomerDetailPage({
     prisma.transaction.findMany({
       where: { userId: id },
       orderBy: { createdAt: 'desc' },
-      take: 20,
+      take: 30,
       include: {
         admin: { select: { name: true } },
         updatedByAdmin: { select: { name: true, username: true } },
@@ -101,74 +102,110 @@ export default async function CustomerDetailPage({
   }))
 
   return (
-    <div className="p-4 md:p-6 pb-24 max-w-lg mx-auto">
-      <div className="flex items-center gap-3 mb-5">
-        <Link href="/admin/customers" className="text-gray-400 hover:text-gray-600 text-xl">←</Link>
-        <h1 className="text-xl font-bold text-gray-800">ข้อมูลลูกค้า</h1>
-      </div>
-
-      {/* Profile */}
-      <div className="bg-white rounded-2xl shadow-sm p-5 mb-4 border border-gray-100">
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold text-xl">
-              {customer.name.charAt(0)}
-            </div>
-            <div>
-              <h2 className="font-bold text-gray-900 text-lg">{customer.name}</h2>
-              <p className="text-gray-500 text-sm">@{customer.username}</p>
-              {customer.phone && <p className="text-gray-400 text-sm">📞 {customer.phone}</p>}
-            </div>
+    <div className="p-4 sm:p-6 pb-28 sm:pb-8 max-w-5xl mx-auto space-y-5">
+      {/* Top Breadcrumb & Actions */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/customers"
+            className="w-9 h-9 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 flex items-center justify-center text-gray-600 transition"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div>
+            <h1 className="text-lg sm:text-xl font-black text-gray-900">ข้อมูลสมาชิก</h1>
+            <p className="text-xs text-gray-500">รายละเอียดแต้มสะสมและประวัติการสั่งซื้อรายบุคคล</p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/admin/add-stamp?userId=${customer.id}`}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-xl transition shadow-2xs flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            <span>บันทึกขาย / ให้แต้ม</span>
+          </Link>
           <EditCustomerButton customer={customer} />
         </div>
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <div className="bg-emerald-50 rounded-xl p-3">
-            <p className="text-xl font-bold text-emerald-600">{customer.totalCups}</p>
-            <p className="text-xs text-gray-500">แก้วทั้งหมด</p>
-          </div>
-          <div className="bg-amber-50 rounded-xl p-3">
-            <p className="text-xl font-bold text-amber-500">#{rank + 1}</p>
-            <p className="text-xs text-gray-500">อันดับ</p>
-          </div>
-          <div className="bg-purple-50 rounded-xl p-3">
-            <p className="text-xl font-bold text-purple-500">{customer.freeRedeems}</p>
-            <p className="text-xs text-gray-500">แลกฟรี</p>
-          </div>
-        </div>
-        <p className="text-xs text-gray-400 mt-3 text-center">
-          สมาชิกตั้งแต่ {formatDate(customer.createdAt)}
-        </p>
       </div>
 
-      {/* Stamp Card */}
-      <div className="mb-4">
-        <StampCard stamps={customer.stamps} stampsRequired={STAMPS_REQUIRED} freeRedeems={customer.freeRedeems} />
-      </div>
+      {/* Main 2-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Left Column (5 cols): Profile Summary + Stamp Card */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="bg-white rounded-2xl shadow-xs p-5 border border-gray-100 space-y-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-14 h-14 bg-emerald-50 border border-emerald-200/60 rounded-2xl flex items-center justify-center text-emerald-700 font-black text-xl shrink-0">
+                {customer.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <h2 className="font-bold text-gray-900 text-base sm:text-lg truncate">
+                  {customer.name}
+                </h2>
+                <p className="text-gray-400 text-xs">@{customer.username}</p>
+                <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 flex-wrap">
+                  {customer.phone && (
+                    <span className="inline-flex items-center gap-1">
+                      <Phone className="w-3 h-3 text-emerald-600" />
+                      {customer.phone}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-gray-400" />
+                    สมัคร {formatDate(customer.createdAt)}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-      {/* Give Stamps Button */}
-      <Link
-        href={`/admin/add-stamp?userId=${customer.id}`}
-        className="block w-full bg-emerald-600 text-white text-center font-semibold py-3 rounded-xl hover:bg-emerald-700 transition mb-3 shadow-sm"
-      >
-        ☕ ให้แต้มลูกค้านี้
-      </Link>
+            <div className="grid grid-cols-3 gap-2.5 pt-3 border-t border-gray-100 text-center">
+              <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-100">
+                <p className="text-lg font-black text-emerald-700">{customer.totalCups}</p>
+                <p className="text-xs text-gray-500 font-medium">แก้วสะสม</p>
+              </div>
+              <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-100">
+                <p className="text-lg font-black text-gray-900">#{rank + 1}</p>
+                <p className="text-xs text-gray-500 font-medium">อันดับร้าน</p>
+              </div>
+              <div className="bg-gray-50/80 rounded-xl p-2.5 border border-gray-100">
+                <p className="text-lg font-black text-amber-600">{customer.freeRedeems}</p>
+                <p className="text-xs text-gray-500 font-medium">สิทธิ์แลกฟรี</p>
+              </div>
+            </div>
+          </div>
 
-      {/* Super Admin Delete Button */}
-      {session.role === 'SUPER_ADMIN' && (
-        <div className="mb-4">
-          <DeleteCustomerButton customerId={customer.id} customerName={customer.name} />
+          {/* Stamp Card */}
+          <StampCard
+            stamps={customer.stamps}
+            stampsRequired={STAMPS_REQUIRED}
+            freeRedeems={customer.freeRedeems}
+          />
+
+          {/* Super Admin Delete Button */}
+          {session.role === 'SUPER_ADMIN' && (
+            <DeleteCustomerButton customerId={customer.id} customerName={customer.name} />
+          )}
         </div>
-      )}
 
-      {/* Transactions */}
-      <div className="bg-white rounded-2xl shadow-sm p-4 border border-gray-100">
-        <h2 className="font-semibold text-gray-800 mb-3 text-sm">ประวัติธุรกรรม</h2>
-        <CustomerTransactionsClient
-          transactions={transactions}
-          menuItems={menuItems}
-          isSuperAdmin={session.role === 'SUPER_ADMIN'}
-        />
+        {/* Right Column (7 cols): Customer Transactions */}
+        <div className="lg:col-span-7 bg-white rounded-2xl shadow-xs p-4 sm:p-5 border border-gray-100">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+            <div>
+              <h2 className="font-bold text-gray-900 text-sm sm:text-base">
+                ประวัติธุรกรรมของลูกค้า
+              </h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                รายการสั่งซื้อและแลกเครื่องดื่มล่าสุด ({transactions.length} รายการ)
+              </p>
+            </div>
+          </div>
+          <CustomerTransactionsClient
+            transactions={transactions}
+            menuItems={menuItems}
+            isSuperAdmin={session.role === 'SUPER_ADMIN'}
+          />
+        </div>
       </div>
     </div>
   )

@@ -1,9 +1,9 @@
 import { getSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import Image from 'next/image'
 import { logout } from '@/app/actions/auth'
 import AdminMobileNav from '@/components/admin/AdminMobileNav'
+import AdminSidebarNav from '@/components/admin/AdminSidebarNav'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -11,58 +11,47 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect('/login')
   }
 
-  const navItems = [
-    { href: '/admin/dashboard', icon: '📊', label: 'ภาพรวม' },
-    { href: '/admin/add-stamp', icon: '☕', label: 'ให้แต้ม' },
-    { href: '/admin/menu', icon: '📖', label: 'เมนูร้าน' },
-    { href: '/admin/customers', icon: '👥', label: 'ลูกค้า' },
-    { href: '/admin/leaderboard', icon: '🏆', label: 'อันดับ' },
-    { href: '/admin/transactions', icon: '📋', label: 'ธุรกรรม' },
-    { href: '/admin/qr-code', icon: '📱', label: 'QR ร้าน' },
-    ...(session.role === 'SUPER_ADMIN'
-      ? [{ href: '/admin/manage-admins', icon: '👑', label: 'จัดการ Admin' }]
-      : []),
-  ]
-
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row w-full max-w-full overflow-x-hidden">
-      {/* Desktop Sidebar (จอคอมพิวเตอร์แสดงครบทุกเมนู) */}
-      <aside className="hidden md:flex w-64 bg-emerald-800 flex-col min-h-screen fixed top-0 left-0 shadow-lg z-20">
-        <div className="px-6 py-6 border-b border-emerald-700/60">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-60 bg-emerald-800 flex-col min-h-screen fixed top-0 left-0 shadow-sm z-20">
+        <div className="px-5 py-5 border-b border-emerald-700/60">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-600/50 flex-shrink-0 shadow-sm bg-white">
-              <Image src="/logo.jpg" alt="Logo" width={40} height={40} className="w-full h-full object-cover" unoptimized />
+            <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-600/50 flex-shrink-0 shadow-2xs bg-white">
+              <Image
+                src="/logo.jpg"
+                alt="Logo"
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+                unoptimized
+              />
             </div>
-            <div>
-              <p className="text-white font-black text-lg tracking-tight">ติดชาคอฟฟี่</p>
-              <p className="text-emerald-200 text-xs font-semibold">ระบบจัดการหลังร้าน</p>
+            <div className="min-w-0">
+              <p className="text-white font-black text-base tracking-tight truncate">
+                ติดชาคอฟฟี่
+              </p>
+              <p className="text-emerald-200 text-xs font-medium">ระบบจัดการหลังร้าน</p>
             </div>
           </div>
         </div>
 
-        <nav className="flex-1 px-3.5 py-5 space-y-1.5 overflow-y-auto">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-100 hover:bg-emerald-700 hover:text-white font-semibold text-sm transition"
-            >
-              <span className="text-xl">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
+        <AdminSidebarNav userRole={session.role} />
 
-        <div className="px-5 py-4 border-t border-emerald-700/60 bg-emerald-900/30">
-          <p className="text-emerald-300 text-xs mb-1 font-medium">เข้าสู่ระบบโดย</p>
-          <p className="text-white text-sm font-bold truncate">{session.name}</p>
-          <span className="inline-block mt-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-700 text-emerald-100">
-            {session.role === 'SUPER_ADMIN' ? '👑 Super Admin' : '🛠️ Admin'}
-          </span>
-          <form action={logout} className="mt-3">
+        <div className="px-4 py-4 border-t border-emerald-700/60 bg-emerald-900/30">
+          <div className="flex items-center justify-between gap-2 mb-2.5">
+            <div className="min-w-0">
+              <p className="text-white text-xs font-bold truncate">{session.name}</p>
+              <p className="text-emerald-300 text-[11px] font-medium">
+                {session.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
+              </p>
+            </div>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" title="ออนไลน์" />
+          </div>
+          <form action={logout}>
             <button
               type="submit"
-              className="w-full text-center px-3 py-2 text-emerald-200 hover:text-white text-xs font-bold rounded-xl bg-emerald-800/80 hover:bg-red-600/80 transition"
+              className="w-full text-center px-3 py-2 text-emerald-100 hover:text-white text-xs font-semibold rounded-xl bg-emerald-800/80 hover:bg-red-600/90 transition"
             >
               ออกจากระบบ
             </button>
@@ -70,11 +59,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </aside>
 
-      {/* Mobile Top Header & 4-Item Bottom Navigation (พร้อม Drawer สำหรับเมนูอื่นๆ) */}
+      {/* Mobile Top Header & Bottom Navigation */}
       <AdminMobileNav userName={session.name} userRole={session.role} />
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-full min-w-0 md:ml-64 pt-16 md:pt-0 overflow-x-hidden">
+      <main className="flex-1 w-full max-w-full min-w-0 md:ml-60 pt-14 md:pt-0 overflow-x-hidden">
         {children}
       </main>
     </div>

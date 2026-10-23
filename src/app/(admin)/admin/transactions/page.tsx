@@ -2,15 +2,23 @@ import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import TransactionListClient, { TransactionWithDetails } from '@/components/admin/TransactionListClient'
+import { getBangkokDateString } from '@/lib/utils'
 
-export default async function TransactionsPage() {
+export default async function TransactionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string; date?: string }>
+}) {
   const session = await getSession()
   if (!session || (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) redirect('/login')
+
+  const params = await searchParams
+  const todayStr = getBangkokDateString()
 
   const [rawTransactions, menuItems] = await Promise.all([
     prisma.transaction.findMany({
       orderBy: { createdAt: 'desc' },
-      take: 200,
+      take: 500,
       include: {
         user: { select: { id: true, name: true, username: true } },
         admin: { select: { name: true } },
@@ -40,7 +48,6 @@ export default async function TransactionsPage() {
     }),
   ])
 
-  // Transform transactions for Client Component
   const transactions: TransactionWithDetails[] = rawTransactions.map((tx) => ({
     id: tx.id,
     userId: tx.userId,
@@ -82,12 +89,19 @@ export default async function TransactionsPage() {
   const isSuperAdmin = session.role === 'SUPER_ADMIN'
 
   return (
-    <div className="p-4 md:p-6 pb-24 md:pb-6 max-w-5xl mx-auto space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800">📋 ประวัติธุรกรรมและการขายทั้งหมด</h1>
+    <div className="p-4 sm:p-6 pb-24 sm:pb-8 max-w-5xl mx-auto space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h1 className="text-lg sm:text-xl font-black text-gray-900">
+            ประวัติธุรกรรมและการขาย
+          </h1>
+          <p className="text-xs text-gray-500 mt-0.5">
+            ตรวจสอบรายการบิลแยกตามวัน ค้นหาออเดอร์ หรือแก้ไขรายการย้อนหลัง
+          </p>
+        </div>
         {isSuperAdmin && (
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
-            👑 สิทธิ์ตรวจสอบ Super Admin
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 border border-purple-200/80">
+            สิทธิ์ตรวจสอบ Super Admin
           </span>
         )}
       </div>
@@ -96,6 +110,9 @@ export default async function TransactionsPage() {
         transactions={transactions}
         menuItems={menuItems}
         isSuperAdmin={isSuperAdmin}
+        initialPeriod={params.period}
+        initialDate={params.date}
+        todayStr={todayStr}
       />
     </div>
   )

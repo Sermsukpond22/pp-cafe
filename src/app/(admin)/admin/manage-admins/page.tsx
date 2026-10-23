@@ -20,10 +20,20 @@ export default async function ManageAdminsPage() {
   })
 
   return (
-    <div className="p-4 md:p-6 pb-24 max-w-2xl">
-      <h1 className="text-xl font-bold text-gray-800 mb-1">👑 จัดการ Admin</h1>
-      <p className="text-gray-400 text-sm mb-5">เพิ่มหรือถอนสิทธิ์ Admin</p>
-      <ManageAdminsClient admins={admins} customers={customers} currentUserId={session.userId} />
+    <div className="p-4 sm:p-6 pb-28 sm:pb-8 max-w-4xl mx-auto space-y-5">
+      <div>
+        <h1 className="text-lg sm:text-xl font-black text-gray-900">
+          จัดการสิทธิ์ผู้ดูแลระบบ (Admin)
+        </h1>
+        <p className="text-xs text-gray-500 mt-0.5">
+          แต่งตั้งพนักงานเป็นผู้ดูแลระบบ หรือถอนสิทธิ์การใช้งานหลังร้าน
+        </p>
+      </div>
+      <ManageAdminsClient
+        admins={admins}
+        customers={customers}
+        currentUserId={session.userId}
+      />
     </div>
   )
 }
